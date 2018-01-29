@@ -1,3 +1,3 @@
-venv
-test.json
+venv/
+*.json
 db_test.py
