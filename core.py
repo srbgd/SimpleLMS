@@ -3,10 +3,10 @@ import datebase
 class Core:
 
 	user = None
-	db = None
+	db = datebase.Database
 
 	def login(self, login, password):
-		if db.check_user(login, password):
+		if self.db.check_user(login, password):
 			user = User(login, password)
 			return 0
 		else:
@@ -16,4 +16,4 @@ class Core:
 		pass
 
 	def __init__(self):
-		init_db()
+		self.init_db()

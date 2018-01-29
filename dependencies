@@ -44,13 +44,14 @@ Operations:
             update the information about the book
             remove a book
     System:
-        increment/decrement copies of the book:
+        increment/decrement copies of the book
+        add new user
+
     Database:
         add/update/remove a book | by id or match
         add/update/remove a user | by id or match
         find books that match some parameters | or fine their id's
         find user/users that match some parameters | or find their id's
-
 подумать позже: красивый id (by Marsel), хостинг - mlab (by Marsel)
 
 

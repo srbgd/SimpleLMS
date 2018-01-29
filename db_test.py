@@ -6,6 +6,7 @@ import datetime
 import pprint
 
 client = MongoClient()
+client.drop_database("db")
 db = client.db
 shelf = db.shelf
 post_id = shelf.insert_one({"hell":"yeah"})
@@ -22,7 +23,6 @@ new_posts = [{"author": "Mike",
                "text": "and pretty easy too!",
                "date": datetime.datetime(2009, 11, 10, 10, 45)}]
 result = shelf.insert_many(new_posts)
-# print(result.inserted_ids)
+print(result.inserted_ids)
 for post in shelf.find():
 	pprint.pprint(post)
-client.drop_database("db")
