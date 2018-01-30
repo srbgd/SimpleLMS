@@ -1,51 +1,36 @@
-from pymongo import MongoClient
-import pymongo
+import os
+import json
 
 
-class Database:
-	client = MongoClient()
-	db = client.db
-	shelf = db.shelf
-	result = shelf.create_index([('id', pymongo.ASCENDING)], unique = True) #say we do id like this
+class DateBase:
 
-	def __init__(self, port = None):
-		if port is None:
-			self.client = MongoClient(port)
+	db = None
+	file = 'db.json'
 
-	def get(self, match):
-		if match is None:
-			return self.shelf.find()
+	def __init__(self, file):
+		self.file = file + '.json'
+		if os.path.isfile(self.file):
+			self.db = json.loads(open(self.file).read())
 		else:
-			return self.shelf.find(match)
+			self.db = []
 
-	def get_ids(self, match):
-		found = self.get_books(match)
-		result = []
-		for document in found:
-			result.append(document['id'])
-		return result
+	def update(self):
+		json.dump(self.db, open(self.file, 'w'))
 
-	# We can get ids of inserted documents (if we need)
-	def insert_one(self, document):
-		self.shelf.insert_one(document)
+	def add(self, item):
+		self.db.append(item)
+		self.update()
 
-	def insert_many(self, documents = [{}]):
-		self.shelf.insert_many(documents)
+	def lookup(self, attributes):
+		return [item for item in self.db if all(value == item['attributes'][key] for key, value in attributes.items())]
 
-	def update_one(self, match, setting):
-		self.shelf.update_one(match, {"$set": setting,
-									  "$currentDate":{"lastModified": True}})
+	def delete(self, id):
+		self.db = [item for item in self.db if item['id'] != id]
+		self.update()
 
-	def update_many(self, match, setting):
-		self.shelf.update_many(match, {"$set": setting,
-									  "$currentDate":{"lastModified": True}})
-
-	def replace_one(self, match, replacement):
-		self.shelf.replace_one(match, replacement)
-
-	def replace_many(self, match, replacement):
-		self.shelf.replace_many(match, replacement)
-
-
-
-
+	def modify(self, id, attributes):
+		for i in self.db:
+			if i['id'] == id:
+				for key, value in attributes.items():
+					i['attributes'][key] = value
+		self.update()

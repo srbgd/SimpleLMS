@@ -1,0 +1,10 @@
+[
+  {
+    "type": "Librarian",
+    "permissions": ["add", "register"]
+  },
+  {
+    "type": "Patron",
+    "permissions": []
+  }
+]

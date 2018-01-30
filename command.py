@@ -12,7 +12,7 @@ class Command:
 	def cmd(self):
 		return self.__cmd
 
-	def attribute(self):
+	def attributes(self):
 		return self.__attributes
 
 	def target(self):
