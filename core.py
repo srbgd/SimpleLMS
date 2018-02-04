@@ -1,4 +1,5 @@
 from database import DataBase
+
 from command import Command
 import json
 
@@ -90,7 +91,7 @@ class Core:
 			return False
 
 	def init_db(self):
-		self.db = DataBase()
+		self.db = DataBase("file")
 
 	def init_map(self):
 		self.map = {
