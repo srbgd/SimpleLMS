@@ -1,0 +1,17 @@
+[
+  {
+    "type": "librarian",
+    "permissions": ["modify", "register", "insert", "delete"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  },
+  {
+    "type": "faculty",
+    "permissions": ["find"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  },
+  {
+    "type": "student",
+    "permissions": ["find"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  }
+]
