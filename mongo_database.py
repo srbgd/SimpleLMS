@@ -2,15 +2,18 @@ from pymongo import MongoClient
 
 
 class DateBase:
-	client = MongoClient()
+
+	client = None
 	db = client.db
 	shelf = db.shelf
 
-	def __init__(self, port=None):
-		if port is not None:
-			client = MongoClient(port)
-			db = client.db
-			shelf = db.shelf
+	def __init__(self):
+		# if port is not None:
+		# 	client = MongoClient(port)
+		# 	db = client.db
+		# 	shelf = db.shelf
+		client = MongoClient("mongodb://iskander:aslamhamna@ds040898.mlab.com:40898/dbslms")
+		pass
 
 	def add(self, item):
 		self.shelf.insert_one(item)

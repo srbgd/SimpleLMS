@@ -1,4 +1,4 @@
-from datebase import DateBase
+from database import DateBase
 from command import Command
 import json
 
@@ -41,7 +41,7 @@ class Core:
 			return False
 
 	def init_db(self):
-		self.db = DateBase('db')
+		self.db = DateBase()
 
 	def init_map(self):
 		self.map = {
