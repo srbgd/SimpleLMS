@@ -1,0 +1,10 @@
+[
+  {
+    "type": "book",
+    "attributes": ["title", "author"]
+  },
+  {
+    "type": "video",
+    "attributes": ["title", "author", "duration"]
+  }
+]
