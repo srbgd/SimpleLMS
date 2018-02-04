@@ -1,4 +1,0 @@
-venv/
-.idea/
-*.json
-db_test.py
