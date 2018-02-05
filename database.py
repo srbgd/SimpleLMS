@@ -52,6 +52,9 @@ class DataBase:
 				return True
 		return False
 
+	def get_by_id(self, id):
+		return [i for i in self.db if i['id'] == id][0]
+
 	def get_max_id(self):
 		"""Get tne maximum id in database"""
 		return max(i['id'] for i in self.db) if self.db else -1

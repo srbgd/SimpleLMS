@@ -1,11 +1,11 @@
 [
   {
     "type": "book",
-    "attributes": ["title", "authors", "publisher", "edition", "year"]
+    "attributes": ["title", "authors", "publisher", "edition", "date"]
   },
   {
     "type": "journal-article",
-    "attributes": ["title", "authors", "journal", "publisher", "editors", "year"]
+    "attributes": ["title", "authors", "journal", "editors", "date"]
   },
   {
     "type": "audio-video",

@@ -6,12 +6,12 @@
   },
   {
     "type": "faculty",
-    "permissions": ["find"],
+    "permissions": ["find", "checkout", "return"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
     "type": "student",
-    "permissions": ["find"],
+    "permissions": ["find", "checkout", "return"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   }
 ]

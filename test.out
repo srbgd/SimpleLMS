@@ -1,0 +1,20 @@
+Success
+
+True
+Success
+
+True
+True
+True
+True
+True
+True
+True
+True
+Success
+
+[{'attributes': {'edition': '3', 'date': '2009', 'title': 'Introduction to Algorithms', 'publisher': 'MIT Press', 'authors': 'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein'}, 'type': 'book', 'id': 3}]
+Success
+
+[{'attributes': {'address': 'innopolis', 'name': 'test', 'phone-number': '88005553535', 'password': 'pass', 'card-number': '1234', 'login': 'lib'}, 'type': 'librarian', 'id': 0}, {'attributes': {'address': 'innopolis', 'name': 'test', 'phone-number': '88005553535', 'password': 'pass', 'card-number': '9876', 'login': 'stud'}, 'type': 'student', 'id': 1}, {'attributes': {'address': 'innopolis', 'name': 'test', 'phone-number': '88005553535', 'password': 'pass', 'card-number': '1488', 'login': 'facu'}, 'type': 'faculty', 'id': 2}, {'attributes': {'edition': '3', 'date': '2009', 'title': 'Introduction to Algorithms', 'publisher': 'MIT Press', 'authors': 'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest and Clifford Stein'}, 'type': 'book', 'id': 3}, {'attributes': {'editors': 'Edward Nash Yourdon', 'journal': 'Communication ACM', 'title': 'Go to Statement Considered Harmful', 'date': 'March 1968', 'authors': 'Edsger W. Dijkstra'}, 'type': 'journal-article', 'id': 5}, {'attributes': {'title': 'some tite', 'authors': 'some authors'}, 'type': 'audio-video', 'id': 6}]
+
