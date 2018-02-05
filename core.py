@@ -1,4 +1,4 @@
-from mongo_database import DataBase
+from database import DataBase
 from command import Command
 import json
 
@@ -18,6 +18,7 @@ class Core:
 	"""Database"""
 	id = 0
 	"""Current id"""
+	checked_out = []
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
@@ -109,6 +110,24 @@ class Core:
 		else:
 			return False
 
+	def check_out(self, id, attributes):
+		if attributes != dict():
+			return None
+		if id not in self.checked_out:
+			item = self.db.get_by_id(int(id))
+			if self.check_document_type(item['type']):
+				self.checked_out.append(id)
+				return True
+		return False
+
+	def give_back(self, id, attributes):
+		if attributes != dict():
+			return None
+		if id in self.checked_out:
+			self.checked_out.remove(id)
+			return True
+		return False
+
 	def init_db(self):
 		"""Initialize database"""
 		self.db = DataBase()
@@ -120,7 +139,9 @@ class Core:
 			'register': self.register,
 			'find': self.find,
 			'delete': self.delete,
-			'modify': self.modify
+			'modify': self.modify,
+			'checkout': self.check_out,
+			'return': self.give_back
 		}
 
 	def init_users(self):
