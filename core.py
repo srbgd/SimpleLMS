@@ -1,4 +1,4 @@
-from database import DataBase
+from mongo_database import DataBase
 from command import Command
 import json
 
