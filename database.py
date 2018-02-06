@@ -3,9 +3,7 @@ import json
 
 
 class DataBase:
-	"""
-	Database class
-	"""
+	"""	Database class"""
 
 	db = []
 	"""List if items"""
@@ -52,8 +50,13 @@ class DataBase:
 				return True
 		return False
 
+	def drop(self):
+		self.db = []
+		self.update()
+
 	def get_by_id(self, id):
-		return [i for i in self.db if i['id'] == id][0]
+		found = [i for i in self.db if i['id'] == id]
+		return found[0] if found else []
 
 	def get_max_id(self):
 		"""Get tne maximum id in database"""
