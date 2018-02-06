@@ -1,13 +1,16 @@
 from database import DataBase
 from command import Command
+import datetime
 import json
 
 
 class Core:
 	"""Core class"""
 
+	current_user = None
+	"""Current user"""
 	permissions = []
-	"""List of command wchich are allowed to execute for current user"""
+	"""List of command which are allowed to execute for current user"""
 	documents = None
 	"""List of types of documents"""
 	users = None
@@ -18,7 +21,6 @@ class Core:
 	"""Database"""
 	id = 0
 	"""Current id"""
-	checked_out = []
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
@@ -47,7 +49,7 @@ class Core:
 
 	def find(self, type, attributes):
 		"""Find item in database"""
-		if self.check_document_type(type) or self.check_user_type(type) or type == '':
+		if self.check_document_type(type) or self.check_user_type(type) or type == '' or type == 'copy':
 			return self.db.lookup(type, attributes)
 		else:
 			return None
@@ -105,28 +107,72 @@ class Core:
 			return True
 		user = self.db.lookup('', {'login': login, 'password': password})
 		if user:
+			self.current_user = user[0]
 			self.permissions = self.get_permissions(user[0])
 			return True
 		else:
 			return False
 
+	def add_copy(self, id, attributes):
+		"""Add copy to database"""
+		document = self.db.get_by_id(int(id))
+		if self.check_document_type(document['type']) and 'reference-book' != document['type']:
+			self.add('copy', {'origin_id': id, 'user_id': None, 'deadline': ''})
+			return True
+		else:
+			return False
+
 	def check_out(self, id, attributes):
+		"""Checkout document"""
 		if attributes != dict():
 			return None
-		if id not in self.checked_out:
-			item = self.db.get_by_id(int(id))
-			if self.check_document_type(item['type']):
-				self.checked_out.append(id)
-				return True
-		return False
+		if any([i['attributes']['origin_id'] == id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
+			return False
+		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id and i['attributes']['user_id'] is None]
+		if not found:
+			return False
+		else:
+			item = found[0]
+			item['attributes']['user_id'] = self.current_user['id']
+			if self.current_user['type'] == 'faculty':
+				duration = 28
+			elif self.db.get_by_id(int(id))['type'] == 'best-seller':
+				duration = 14
+			else:
+				duration = 21
+			item['attributes']['deadline'] = (datetime.datetime.now() + datetime.timedelta(days = duration)).strftime('%d/%m/%Y')
+			return True
 
 	def give_back(self, id, attributes):
+		"""Return document"""
 		if attributes != dict():
 			return None
-		if id in self.checked_out:
-			self.checked_out.remove(id)
-			return True
-		return False
+		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == int(id) and i['attributes']['user_id'] == self.current_user['id']]
+		if not found:
+			return False
+		else:
+			item = found[0]
+			overdue = (datetime.datetime.now() - datetime.datetime.strptime(item['attributes']['deadline'], '%d/%m/%Y')).days
+			fines = max(0, min(int(self.db.get_by_id(item['attributes']['price'])), overdue * 100))
+			if fines != 0:
+				return "You have to pay {} RUB".format(fines)
+			else:
+				return True
+
+	def check_copies(self, id, attributes):
+		if id == '':
+			return self.find('copy', {})
+		else:
+			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id]
+
+	def drop(self, id, attributes):
+		"""Clear database"""
+		self.db.drop()
+		self.current_user = None
+		self.id = 0
+		self.permissions = []
+		self.login('', '')
+		return True
 
 	def init_db(self):
 		"""Initialize database"""
@@ -141,7 +187,10 @@ class Core:
 			'delete': self.delete,
 			'modify': self.modify,
 			'checkout': self.check_out,
-			'return': self.give_back
+			'return': self.give_back,
+			'copy': self.add_copy,
+			'drop': self.drop,
+			'check': self.check_copies
 		}
 
 	def init_users(self):

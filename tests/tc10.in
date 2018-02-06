@@ -1,0 +1,15 @@
+
+
+drop
+register librarian --login l --password pass --name test --address innopolis --phone-number 88005553535 --card-number 1234
+register student --login p --password pass --name test --address innopolis --phone-number 88005553535 --card-number 9876
+insert book --title a title --authors unknown --publisher empty --edition none --date unknown --price 1000
+insert reference-book --title b title --authors unknown --publisher empty --edition none --date unknown
+copy 2
+copy 3
+login
+p
+pass
+checkout 2
+checkout 3
+exit

@@ -29,10 +29,10 @@ class Interface:
 		password = self.input('Password: ')
 		#password = hashlib.sha256((getpass.getpass('Password: ') + 'PwdOZ7u0hnpIWLH5R5ox').encode()).hexdigest()
 		if self.core.login(alias, password):
-			print('Success\n')
+			print('Success' + ('' if self.command_line_mode else '\n'))
 			return True
 		else:
-			print('Fail\n')
+			print('Fail' + ('' if self.command_line_mode else '\n'))
 			return False
 
 	@staticmethod

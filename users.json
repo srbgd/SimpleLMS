@@ -1,7 +1,7 @@
 [
   {
     "type": "librarian",
-    "permissions": ["modify", "register", "insert", "delete"],
+    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {

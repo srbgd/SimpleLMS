@@ -1,0 +1,12 @@
+Success
+True
+True
+True
+True
+True
+True
+Success
+[{'attributes': {'address': 'innopolis', 'phone-number': '88005553535', 'password': 'pass', 'card-number': '1234', 'name': 'test', 'login': 'l'}, 'type': 'librarian', 'id': 0}, {'attributes': {'address': 'innopolis', 'phone-number': '88005553535', 'password': 'pass', 'card-number': '9876', 'name': 'test', 'login': 'p'}, 'type': 'student', 'id': 1}, {'attributes': {'edition': 'none', 'authors': 'unknown', 'publisher': 'empty', 'title': 'b title', 'date': 'unknown', 'price': '1000'}, 'type': 'book', 'id': 2}, {'attributes': {'deadline': '', 'user_id': None, 'origin_id': '2'}, 'type': 'copy', 'id': 3}, {'attributes': {'deadline': '', 'user_id': None, 'origin_id': '2'}, 'type': 'copy', 'id': 4}]
+True
+Success
+[{'attributes': {'deadline': '27/02/2018', 'user_id': 1, 'origin_id': '2'}, 'type': 'copy', 'id': 3}, {'attributes': {'deadline': '', 'user_id': None, 'origin_id': '2'}, 'type': 'copy', 'id': 4}]

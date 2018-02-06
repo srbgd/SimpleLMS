@@ -1,14 +1,22 @@
 [
   {
     "type": "book",
+    "attributes": ["title", "authors", "publisher", "edition", "date", "price"]
+  },
+  {
+    "type": "reference-book",
     "attributes": ["title", "authors", "publisher", "edition", "date"]
   },
   {
+    "type": "best-seller",
+    "attributes": ["title", "authors", "publisher", "edition", "date", "price"]
+  },
+  {
     "type": "journal-article",
-    "attributes": ["title", "authors", "journal", "editors", "date"]
+    "attributes": ["title", "authors", "journal", "editors", "date", "price"]
   },
   {
     "type": "audio-video",
-    "attributes": ["title", "authors"]
+    "attributes": ["title", "authors", "price"]
   }
 ]
