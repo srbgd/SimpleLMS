@@ -1,5 +1,5 @@
-# LMS
-Library Managment System. 
+## SLMS
+Simple Library Managment System. 
 
 ## Usage
 To use this programm you need to have ```python3``` installed on your PC.
