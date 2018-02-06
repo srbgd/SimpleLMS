@@ -52,3 +52,6 @@ class DataBase:
 	def get_max_id(self):
 		"""Get tne maximum id in database"""
 		return self.shelf.find().sort("id", -1).limit(1).next()["id"]
+
+	def get_by_id(self, id):
+		return list(self.shelf.find({"id": id}))
