@@ -141,6 +141,8 @@ class Core:
 			else:
 				duration = 21
 			item['attributes']['deadline'] = (datetime.datetime.now() + datetime.timedelta(days = duration)).strftime('%d/%m/%Y')
+			self.modify(item['id'], item['attributes']) #TODO
+
 			return True
 
 	def give_back(self, id, attributes):

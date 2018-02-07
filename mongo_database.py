@@ -15,7 +15,7 @@ class DataBase:
 		self.shelf = self.db.shelf
 		# self.indexing()
 
-	def drop_collection(self):
+	def drop(self):
 		"""delete all documents from database"""
 		self.shelf.delete_many({})
 
@@ -45,13 +45,16 @@ class DataBase:
 
 	def modify(self, id, attributes):
 		"""Modify item in database"""
-		self.shelf.update_many({"id": id},
-							{"$set": attributes},
-							{"$currentDate": {"lastModified": True}})
+		self.shelf.update_one({"id": id},
+						{"$set": {"attributes": attributes},
+						"$currentDate": {"lastModified": True}}
+							)
 
 	def get_max_id(self):
 		"""Get tne maximum id in database"""
 		return self.shelf.find().sort("id", -1).limit(1).next()["id"]
 
 	def get_by_id(self, id):
-		return list(self.shelf.find({"id": id}))
+		found = (self.shelf.find({"id": id}))
+		# print(found)
+		return found[0] if found else []
