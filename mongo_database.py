@@ -46,8 +46,8 @@ class DataBase:
 	def modify(self, id, attributes):
 		"""Modify item in database"""
 		self.shelf.update_one({"id": id},
-						{"$set": {"attributes": attributes},
-						"$currentDate": {"lastModified": True}}
+						{"$set": {"attributes": attributes}}
+						# "$currentDate": {"lastModified": True}}
 							)
 
 	def get_max_id(self):
