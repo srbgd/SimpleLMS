@@ -10,7 +10,7 @@ class DataBase:
 
 	def __init__(self):
 		"""Initialize database"""
-		self.client = MongoClient("mongodb://reshreshus:1JohnBardeen@ds040898.mlab.com:40898/dbslms")
+		self.client = MongoClient("mongodb://iskander:aslamhamna@ds040898.mlab.com:40898/dbslms")
 		self.db = self.client.dbslms
 		self.shelf = self.db.shelf
 		# self.indexing()
@@ -55,6 +55,6 @@ class DataBase:
 		return self.shelf.find().sort("id", -1).limit(1).next()["id"]
 
 	def get_by_id(self, id):
+		"""Get a document with given id"""
 		found = (self.shelf.find({"id": id}))
-		# print(found)
 		return found[0] if found else []
