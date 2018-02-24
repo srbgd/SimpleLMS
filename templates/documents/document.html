@@ -1,0 +1,31 @@
+{% extends "basic.html" %}
+
+{% block content %}
+<p> Type: <b>{{document.type}}</b> </p>
+    {% for key, value in document.attributes.items() %}
+<p> {{key}} : <b>{{value}}</b></p>
+    {% endfor %}
+
+
+    {% if user.type == "librarian" %}
+        <h5> <a href=" {{url_for('edit_document', doc_id = document.id)}}">Edit</a></h5>
+        <h5> <a href=" {{url_for('delete_document', doc_id = document.id)}}">Delete</a></h5>
+
+    {% endif %}
+    <p> Available copies: {{available_copies|length}}</p>
+    {% if user.type == "librarian" %}
+        <h5> Users</h5>
+        {% for copy in held_copies %}
+            <p> <a href="{{url_for('user', user_id=copy.attributes.user_id)}}"> {{names[loop.index0]}} {{copy.attributes.user_id}}</a>.
+            Overdue date: {{copy.deadline}}
+            <a href="{{url_for('return_document', copy_id = copy['id'])}}"> Return </a></p>
+        {%endfor%}
+    {% endif %}
+    {% if user and user.type != "librarian"%}
+        {% if checked %}
+            You checked out this book
+        {% else %}
+            <h5> <a href="{{url_for('check_out', doc_id = document.id)}}">Check out</a></h5>
+        {% endif %}
+    {%endif%}
+{% endblock %}

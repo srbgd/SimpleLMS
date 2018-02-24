@@ -22,7 +22,7 @@ class Core:
 	id = 0
 	"""Current id"""
 
-	def add(self, target, attributes):
+	def add(self, target, attributes): #RISHAT
 		"""Add new item to database"""
 		self.db.add({
 			'id': self.id,
@@ -30,6 +30,10 @@ class Core:
 			'attributes': attributes
 		})
 		self.id += 1
+		return self.id - 1 #HERE
+
+	# def gentle_add(self, new_document):
+	# 	self.db.add(new_document)
 
 	def register(self, target, attributes):
 		"""Add new user to database"""
@@ -54,16 +58,38 @@ class Core:
 		else:
 			return None
 
-	def delete(self, id, attributes):
+	def search(self, string):  # RISHAT TODO SERGEY GET LIST OF DOCUEMETNS
+		pass
+
+	def courteous_find(self, attributes):  # RISHAT
+		return self.db.courteous_lookup(attributes)
+
+	def find_all_documets(self):  # RISHAT
+		return self.courteous_find({"$or":[{"type": "book"}, {"type": "reference_book"}, {"type": "journal_article"}, {"type": "audio_video"}, {"type": "best_seller"}]})
+
+	def find_by_id(self, some_id):  # RISHAT
+		return self.db.get_by_id(some_id)
+
+	def delete(self, some_id, attributes):
 		"""Delete item from database"""
 		if attributes != dict():
 			return None
 		else:
-			return self.db.delete(int(id))
+			return self.db.delete(some_id) #RISHAT CHANGED int(id) to id
 
-	def modify(self, id, attributes):
+	def modify(self, some_id, attributes, new_type = None):  # RISHAT
 		"""Modify item in database"""
-		return self.db.modify(int(id), attributes)
+		old_attributes = self.find_by_id(some_id)['attributes']
+		for item, value in attributes.items():
+			old_attributes[item] = value
+		if new_type:
+			return self.db.modify_and_change_type(some_id, attributes=old_attributes, type=new_type)
+		return self.db.modify(some_id, old_attributes) #RISHAT CHANGED int(id) to id
+
+	def modify_current_user(self, some_id, attributes):  # RISHAT
+		for item, value in attributes.items():
+			self.current_user['attributes'][item] = value
+		self.db.modify(some_id, self.current_user['attributes']) #RISHAT CHANGED int(id) to id
 
 	def check_document(self, type, attributes):
 		"""Check if type and attributes are correct"""
@@ -97,7 +123,10 @@ class Core:
 		"""Check if current type of a user exists"""
 		return any(i['type'] == type for i in self.users)
 
-	def login(self, login, password):
+	def login(self, login=None, password=None):
+		if login is password is None:
+			self.current_user = None
+			return True
 		"""Change current user"""
 		if login == password == '':
 			for i in self.users:
@@ -108,66 +137,75 @@ class Core:
 		user = self.db.lookup('', {'login': login, 'password': password})
 		if user:
 			self.current_user = user[0]
+			# raise Exception("yeah")
 			self.permissions = self.get_permissions(user[0])
 			return True
 		else:
 			return False
 
-	def add_copy(self, id, attributes):
+	def add_copy(self, some_id, attributes):
 		"""Add copy to database"""
-		document = self.db.get_by_id(int(id))
+		document = self.db.get_by_id(some_id) #RISHAT CHANGED int(id) to id
 		if self.check_document_type(document['type']) and 'reference-book' != document['type']:
-			self.add('copy', {'origin_id': id, 'user_id': None, 'deadline': ''})
+			self.add('copy', {'origin_id': some_id, 'user_id': None, 'deadline': ''})
 			return True
 		else:
 			return False
 
-	def check_out(self, id, attributes):
+	def check_out(self, some_id, attributes):
 		"""Checkout document"""
 		if attributes != dict():
 			return None
-		if any([i['attributes']['origin_id'] == id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
+		if any([i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
+			# print("второе")
 			return False
-		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id and i['attributes']['user_id'] is None]
+		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] is None]
 		if not found:
+			# print('not found')
 			return False
 		else:
 			item = found[0]
 			item['attributes']['user_id'] = self.current_user['id']
+			# print(self.current_user['id'])
 			if self.current_user['type'] == 'faculty':
 				duration = 28
-			elif self.db.get_by_id(int(id))['type'] == 'best-seller':
+			elif self.db.get_by_id(some_id)['type'] == 'best-seller': #RISHAT CHANGED int(id) to id
 				duration = 14
 			else:
 				duration = 21
 			item['attributes']['deadline'] = (datetime.datetime.now() + datetime.timedelta(days = duration)).strftime('%d/%m/%Y')
-			self.modify(item['id'], item['attributes']) #TODO
-
+			self.modify(item['id'], item['attributes'])
+			print(str(item))
 			return True
 
-	def give_back(self, id, attributes):
+
+	def give_back(self, copy_id, attributes):  # RISHAT: 'give_back' didn't do anything in database
 		"""Return document"""
 		if attributes != dict():
 			return None
-		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == int(id) and i['attributes']['user_id'] == self.current_user['id']]
+		# found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id and i['attributes']['user_id'] == self.current_user['id']]
+		found = [self.find_by_id(copy_id)] # RISHAT - LIBRARIAN SHOULD GET RETURNS, i.e. IT IS HIS WORK TO DO RETURNS
+		# print('found', found)
 		if not found:
 			return False
 		else:
 			item = found[0]
 			overdue = (datetime.datetime.now() - datetime.datetime.strptime(item['attributes']['deadline'], '%d/%m/%Y')).days
-			fines = max(0, min(int(self.db.get_by_id(item['attributes']['price'])), overdue * 100))
+			# fines = max(0, min(int(self.db.get_by_id(item['attributes']['price'])), overdue * 100)) #RISHAT
+			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100)) #RISHAT
+			self.modify(item['id'], {'origin_id': item['attributes']['origin_id'], 'user_id': None, 'deadline': ''}) #RISHAT
 			if fines != 0:
 				return "You have to pay {} RUB".format(fines)
 			else:
 				return True
 
-	def check_copies(self, id, attributes):
-		if id == '':
+	def check_copies(self, some_id, attributes):
+		if some_id == '':
 			return self.find('copy', {})
 		else:
-			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id]
+			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id]
 
-	def drop(self, id, attributes):
+	def drop(self, some_id, attributes):
 		"""Clear database"""
 		self.db.drop()
 		self.current_user = None

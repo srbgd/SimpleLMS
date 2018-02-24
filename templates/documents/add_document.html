@@ -1,0 +1,25 @@
+{% extends "basic.html" %}
+
+{% block content %}
+    <h1>{{title}}</h1>
+    <form action="" method="post">
+        {% if form.is_best_seller %}
+        <p>{{form.is_best_seller.label}}</p>
+        <p>{{form.is_best_seller()}}</p>
+    {% endif %}
+        {{ form.hidden_tag() }}
+         {% for item in attributes %}
+                <p>{{ form[item].label}}</p>
+                <p>{{ form[item]}}</p>
+                {% for error in form[item].errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %} </p>
+            {% endfor %}
+        {%if user.type == "librarian" and add_copies%}
+        <p>{{add_copies.number.label}}</p>
+        <p>{{add_copies.number()}}</p>
+        {%endif%}
+        <p>{{ form.submit() }}</p>
+
+    </form>
+{% endblock %}
