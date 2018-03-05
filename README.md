@@ -1,6 +1,7 @@
 ## SLMS
 Simple Library Managment System. 
 Driven on Flask and pymongo.
+A short presentation of project structure is in slms_structure.pptx
 ## Usage
 To use this program you need to have ```python3``` installed on your PC.
 ### Start
