@@ -36,6 +36,12 @@ def check_out(doc_id):
 		return redirect(url_for('sorry'))
 
 
+@app.route("/users")
+def users():
+	"""rendering page of all users"""
+	return render_template("users/users.html", users = core.find_all_users(), user = core.current_user)
+
+
 def can_check_out():
 	"""return True if current user can check our documents"""
 	try:
@@ -235,7 +241,7 @@ def user(user_id):
 	if can_modify(user_id):
 		copies = get_copies(user_id)
 		documents_names = user_documents_names(copies)
-		return render_template("users/user.html", user=core.find_by_id(user_id), copies=copies, documents=documents_names)
+		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies, documents=documents_names)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -260,7 +266,7 @@ def user_free():
 
 
 def can_modify(user_id=-1):
-	"""checking admissions"""
+	"""checking permissions"""
 	try:
 		return "modify" in core.get_permissions(core.current_user) or core.current_user['id'] == user_id
 	except TypeError:
@@ -272,19 +278,21 @@ def edit_profile(user_id):
 	"""rendering editing profile page"""
 	if can_modify(user_id):
 		form = EditProfileForm()
+		user = core.find_by_id(user_id)
 		if form.validate_on_submit():
 			attributes = {"login":form.login.data, "name": form.name.data,
-													"address": form.address.data, "phone-number": form.phone_number.data}
-			core.modify_current_user(user_id, attributes)
+													"address": form.address.data, "phone-number": form.phone_number.data, "card-number": form.card_number.data}
+			core.modify_user(user_id, attributes)
 			flash('Your changes have been saved.')
 			return redirect(url_for('user', user_id=user_id))
 		elif request.method == 'GET':
-			form.login.data = core.current_user['attributes']['login']
-			form['name'].data = core.current_user['attributes']['name']
-			form.address.data = core.current_user['attributes']['address']
-			form.phone_number.data = core.current_user['attributes']['phone-number']
+			form.login.data = user['attributes']['login']
+			form['name'].data = user['attributes']['name']
+			form.address.data = user['attributes']['address']
+			form.phone_number.data = user['attributes']['phone-number']
+			form.card_number.data = user['attributes']['card-number']
 		return render_template('users/edit_profile.html', title='Edit Profile',
-							   form=form, user=core.current_user)
+							   form=form, user=user)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -307,7 +315,7 @@ def change_password(user_id):
 
 @app.route('/sorry')
 def sorry():
-	"""page for wrong admissions"""
+	"""page for wrong permissions"""
 	return render_template('sorry.html', info='No permissions', user=core.current_user)
 
 

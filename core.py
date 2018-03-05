@@ -64,6 +64,9 @@ class Core:
 	def find_all_documets(self):
 		return self.courteous_find({"$or":[{"type": "book"}, {"type": "reference_book"}, {"type": "journal_article"}, {"type": "audio_video"}, {"type": "best_seller"}]})
 
+	def find_all_users(self):
+		return self.courteous_find({"$or":[{"type":"student"}, {"type":"faculty"},{"type":"librarian"}]})
+
 	def find_by_id(self, some_id):
 		return self.db.get_by_id(some_id)
 
@@ -83,10 +86,11 @@ class Core:
 			return self.db.modify_and_change_type(some_id, attributes=old_attributes, type=new_type)
 		return self.db.modify(some_id, old_attributes)
 
-	def modify_current_user(self, some_id, attributes):
+	def modify_user(self, user_id, attributes):
+		user = self.find_by_id(user_id)
 		for item, value in attributes.items():
-			self.current_user['attributes'][item] = value
-		self.db.modify(some_id, self.current_user['attributes']) # RISHAT CHANGED int(id) to id
+			user['attributes'][item] = value
+		self.db.modify(user_id, user['attributes'])
 
 	def check_document(self, type, attributes):
 		"""Check if type and attributes are correct"""
@@ -154,19 +158,16 @@ class Core:
 		if attributes != dict():
 			return None
 		if any([i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
-			# print("второе")
 			return False
 		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] is None]
 		if not found:
-			# print('not found')
 			return False
 		else:
 			item = found[0]
 			item['attributes']['user_id'] = self.current_user['id']
-			# print(self.current_user['id'])
 			if self.current_user['type'] == 'faculty':
 				duration = 28
-			elif self.db.get_by_id(some_id)['type'] == 'best_seller': #RISHAT CHANGED int(id) to id
+			elif self.db.get_by_id(some_id)['type'] == 'best_seller':
 				duration = 14
 			else:
 				duration = 21

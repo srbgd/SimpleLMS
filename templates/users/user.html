@@ -1,13 +1,14 @@
 {% extends "basic.html" %}
 
 {% block content %}
-    <div><h5> Username: <b>{{ user.attributes.login }}</b></h5></div>
-    <div><h5> Name: <b>{{ user.attributes.name}}</b></h5></div>
-    <div><h5> Phone-Number: <b>{{ user.attributes['phone-number']}}</b></h5></div>
-    <div><h5> Address: <b>{{ user.attributes.address}}</b></h5></div>
-    <div><h5> id: <b>{{ user.id}}</b></h5></div>
-    <h5> <a href=" {{url_for('edit_profile', user_id = user.id)}}"> Edit</a></h5>
-     <h5> <a href=" {{url_for('change_password', user_id = user.id)}}"> Change password</a></h5>
+    <div><h5> Username: <b>{{ a_user.attributes.login }}</b></h5></div>
+    <div><h5> Name: <b>{{ a_user.attributes.name}}</b></h5></div>
+    <div><h5> Phone-Number: <b>{{ a_user.attributes['phone-number']}}</b></h5></div>
+    <div><h5> Address: <b>{{ a_user.attributes.address}}</b></h5></div>
+    <div><h5> id: <b>{{ a_user.id}}</b></h5></div>
+    <div><h5> Card number: <b>{{ a_user.attributes["card-number"]}}</b></h5></div>
+    <h5> <a href=" {{url_for('edit_profile', user_id = a_user.id)}}"> Edit</a></h5>
+     <h5> <a href=" {{url_for('change_password', user_id = a_user.id)}}"> Change password</a></h5>
     <h5>Holding Documents:</h5>
     {% if documents %}
         {% for name in documents %}

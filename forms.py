@@ -18,6 +18,7 @@ class EditProfileForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
     address = StringField('Address', validators=[DataRequired()])
     phone_number = StringField('Phone number', validators=[DataRequired()])
+    card_number = StringField('Card number', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
