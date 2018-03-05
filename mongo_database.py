@@ -51,6 +51,7 @@ class DataBase:
 		self.shelf.update_one({"id":some_id}, {
 			"$set": {"attributes":attributes, "type":type}
 		})
+
 	def modify(self, some_id, attributes):
 		"""Modify item in database"""
 		self.shelf.update_one({"id": some_id},
@@ -60,7 +61,8 @@ class DataBase:
 
 	def get_max_id(self):
 		"""Get tne maximum id in database"""
-		return self.shelf.find().sort("id", -1).limit(1).next()["id"]
+		# return self.shelf.find().sort("id", -1).limit(1).next()["id"]
+		return list(self.shelf.find().sort("id", -1).limit(1))[0]["id"]
 
 	def get_by_id(self, some_id):
 		"""Get a document with given id"""

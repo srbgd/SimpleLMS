@@ -12,7 +12,8 @@
     {% if documents %}
         {% for name in documents %}
             <p> <a href="{{url_for('document', doc_id=copies[loop.index0].attributes.origin_id)}}"> {{name}}</a>.
-            Overdue date: {{copies[loop.index0].deadline}} </p>
+            Deadline: {{copies[loop.index0].attributes.deadline}}
+            </p>
         {%endfor%}
     {%endif%}
 {% endblock %}

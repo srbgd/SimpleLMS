@@ -22,7 +22,7 @@ class Core:
 	id = 0
 	"""Current id"""
 
-	def add(self, target, attributes): #RISHAT
+	def add(self, target, attributes):
 		"""Add new item to database"""
 		self.db.add({
 			'id': self.id,
@@ -30,10 +30,7 @@ class Core:
 			'attributes': attributes
 		})
 		self.id += 1
-		return self.id - 1 #HERE
-
-	# def gentle_add(self, new_document):
-	# 	self.db.add(new_document)
+		return self.id - 1
 
 	def register(self, target, attributes):
 		"""Add new user to database"""
@@ -58,16 +55,16 @@ class Core:
 		else:
 			return None
 
-	def search(self, string):  # RISHAT TODO SERGEY GET LIST OF DOCUEMETNS
+	def search(self, string):
 		pass
 
-	def courteous_find(self, attributes):  # RISHAT
+	def courteous_find(self, attributes):
 		return self.db.courteous_lookup(attributes)
 
-	def find_all_documets(self):  # RISHAT
+	def find_all_documets(self):
 		return self.courteous_find({"$or":[{"type": "book"}, {"type": "reference_book"}, {"type": "journal_article"}, {"type": "audio_video"}, {"type": "best_seller"}]})
 
-	def find_by_id(self, some_id):  # RISHAT
+	def find_by_id(self, some_id):
 		return self.db.get_by_id(some_id)
 
 	def delete(self, some_id, attributes):
@@ -75,21 +72,21 @@ class Core:
 		if attributes != dict():
 			return None
 		else:
-			return self.db.delete(some_id) #RISHAT CHANGED int(id) to id
+			return self.db.delete(some_id)
 
-	def modify(self, some_id, attributes, new_type = None):  # RISHAT
+	def modify(self, some_id, attributes, new_type = None):
 		"""Modify item in database"""
 		old_attributes = self.find_by_id(some_id)['attributes']
 		for item, value in attributes.items():
 			old_attributes[item] = value
 		if new_type:
 			return self.db.modify_and_change_type(some_id, attributes=old_attributes, type=new_type)
-		return self.db.modify(some_id, old_attributes) #RISHAT CHANGED int(id) to id
+		return self.db.modify(some_id, old_attributes)
 
-	def modify_current_user(self, some_id, attributes):  # RISHAT
+	def modify_current_user(self, some_id, attributes):
 		for item, value in attributes.items():
 			self.current_user['attributes'][item] = value
-		self.db.modify(some_id, self.current_user['attributes']) #RISHAT CHANGED int(id) to id
+		self.db.modify(some_id, self.current_user['attributes']) # RISHAT CHANGED int(id) to id
 
 	def check_document(self, type, attributes):
 		"""Check if type and attributes are correct"""
@@ -169,7 +166,7 @@ class Core:
 			# print(self.current_user['id'])
 			if self.current_user['type'] == 'faculty':
 				duration = 28
-			elif self.db.get_by_id(some_id)['type'] == 'best-seller': #RISHAT CHANGED int(id) to id
+			elif self.db.get_by_id(some_id)['type'] == 'best_seller': #RISHAT CHANGED int(id) to id
 				duration = 14
 			else:
 				duration = 21
@@ -179,21 +176,18 @@ class Core:
 			return True
 
 
-	def give_back(self, copy_id, attributes):  # RISHAT: 'give_back' didn't do anything in database
+	def give_back(self, copy_id, attributes):
 		"""Return document"""
 		if attributes != dict():
 			return None
-		# found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id and i['attributes']['user_id'] == self.current_user['id']]
-		found = [self.find_by_id(copy_id)] # RISHAT - LIBRARIAN SHOULD GET RETURNS, i.e. IT IS HIS WORK TO DO RETURNS
-		# print('found', found)
+		found = [self.find_by_id(copy_id)]
 		if not found:
 			return False
 		else:
 			item = found[0]
 			overdue = (datetime.datetime.now() - datetime.datetime.strptime(item['attributes']['deadline'], '%d/%m/%Y')).days
-			# fines = max(0, min(int(self.db.get_by_id(item['attributes']['price'])), overdue * 100)) #RISHAT
-			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100)) #RISHAT
-			self.modify(item['id'], {'origin_id': item['attributes']['origin_id'], 'user_id': None, 'deadline': ''}) #RISHAT
+			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100))
+			self.modify(item['id'], {'origin_id': item['attributes']['origin_id'], 'user_id': None, 'deadline': ''})
 			if fines != 0:
 				return "You have to pay {} RUB".format(fines)
 			else:
