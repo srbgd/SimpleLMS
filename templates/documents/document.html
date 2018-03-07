@@ -30,9 +30,15 @@
         {% endif %}
         {% if user and user.type != "librarian"%}
             {% if checked %}
-                You checked out this document
+                {% if requested_to_return %}
+                    You requested to return
+                {% else %}
+                    <h5> <a href="{{url_for('request_return', copy_id = copy_id)}}">Request to Return</a></h5>
+                {% endif %}
+            {% elif requested %}
+                You requested to check out
             {% elif user.type != "unconfirmed" %}
-                <h5> <a href="{{url_for('check_out', doc_id = document.id)}}">Check out</a></h5>
+                <h5> <a href="{{url_for('request_document', doc_id = document.id)}}">Request</a></h5>
             {% endif %}
         {%endif%}
     {% endif %}

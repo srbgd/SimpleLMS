@@ -24,6 +24,14 @@
 			width:22%;
 			float:left
 		}
+		.button{
+		   width: 0px;
+		   height: 0px;
+		   margin: 0px;
+		   border: 0px;
+		   padding: 0px;
+		   position: relative
+		}
 	</style>
 </head>
 
@@ -81,14 +89,16 @@
 				<li class="nav-item"><a class="nav-link" href="{{ url_for('documents') }}">SLMS</a></li>
 				  {% if user %}
 				  <li class="nav-item"><a class="nav-link" href="{{ url_for('user', user_id=user.id) }}">{{user.attributes.name}}</a></li>
-				  <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+
 				  		{% if user.type == "librarian" %}
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('add_documents') }}">Add document</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('users') }}">Users</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('checked_out') }}"> Checked out</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('overdue_users') }}"> Overdue users</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('registration_requests') }}"> Unconfirmed users</a></li>
+				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('documents_requests') }}"> Documents requests</a></li>
 				  		{% endif %}
+				  <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
 				  {% else %}
 				<li class="nav-item"> <a class="nav-link" href="{{ url_for('login') }}">Login</a></li>
 				  <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Register</a></li>

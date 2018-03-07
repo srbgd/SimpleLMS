@@ -97,8 +97,20 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Register', validators=[DataRequired()])
 
 
-class ApproveForm(FlaskForm):
+class SelectForm(FlaskForm):
     type = SelectField('Status',
                        choices=[('unconfirmed', 'Unconfirmed'), ('faculty', 'Faculty'), ('student', 'Student'),
                                 ('librarian', 'Librarian')])
     submit = SubmitField('Register', validators=[DataRequired()])
+
+
+class ApproveForm(FlaskForm):
+    student = SubmitField(label="Student")
+    faculty = SubmitField(label="Faculty")
+    librarian = SubmitField(label="Librarian")
+    decline = SubmitField(label="Decline")
+
+
+class ApproveDocumentForm(FlaskForm):
+    approve = SubmitField(label="Approve")
+    decline = SubmitField(label="Decline")

@@ -1,6 +1,7 @@
 from mongo_database import DataBase
 from command import Command
 import datetime
+import sys
 import json
 
 
@@ -53,6 +54,9 @@ class Core:
 
 	def find(self, type, attributes):
 		"""Find item in database"""
+		print(type, attributes)
+		sys.stdout.flush()
+
 		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request']:
 			return self.db.lookup(type, attributes)
 		else:
@@ -150,7 +154,7 @@ class Core:
 		"""Delete item from database"""
 		return self.db.delete(some_id)
 
-	def modify(self, some_id, attributes, new_type=None):
+	def modify(self, some_id, attributes=None, new_type=None):
 		"""Modify item in database"""
 		old_attributes = self.find_by_id(some_id)['attributes']
 		if attributes is not None:
@@ -229,7 +233,7 @@ class Core:
 	def request(self, doc_id, action):
 		if action not in ['check-out', 'return']:
 			return False
-		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'actions': action}
+		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'action': action}
 		if self.find(type, attributes):
 			return False
 		else:
@@ -272,8 +276,8 @@ class Core:
 	def decline_check_out(self, request_id):
 		return self.decline(request_id, 'check-out')
 
-	def request_return(self, doc_id):
-		return self.request(doc_id, 'return')
+	def request_return(self, copy_id):
+		return self.request(copy_id, 'return')
 
 	def approve_return(self, request_id):
 		return self.approve(request_id, 'return')
