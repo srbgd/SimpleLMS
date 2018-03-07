@@ -4,19 +4,21 @@
     "attributes": ["title", "authors", "publisher", "edition", "date", "price"]
   },
   {
-    "type": "reference-book",
+    "type": "reference_book",
     "attributes": ["title", "authors", "publisher", "edition", "date"]
   },
   {
-    "type": "best-seller",
+    "type": "best_seller",
     "attributes": ["title", "authors", "publisher", "edition", "date", "price"]
   },
   {
-    "type": "journal-article",
+    "type": "journal_article",
     "attributes": ["title", "authors", "journal", "editors", "date", "price"]
   },
   {
-    "type": "audio-video",
+    "type": "audio_video",
     "attributes": ["title", "authors", "price"]
   }
 ]
+
+

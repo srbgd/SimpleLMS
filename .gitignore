@@ -1,4 +1,9 @@
+TODO
+database.py
+old_interface.py
+main.py
+hello.py
+config.py
 venv/
 .idea/
-db_test.py
 __pycache__

@@ -1,4 +1,4 @@
-from database import DataBase
+from mongo_database import DataBase
 from command import Command
 import datetime
 import json
@@ -22,7 +22,7 @@ class Core:
 	id = 0
 	"""Current id"""
 
-	def add(self, target, attributes):
+	def add(self, target, attributes, status_unconfirmed=False):
 		"""Add new item to database"""
 		self.db.add({
 			'id': self.id,
@@ -30,11 +30,15 @@ class Core:
 			'attributes': attributes
 		})
 		self.id += 1
+		if status_unconfirmed:
+			return -(self.id - 1)
+		return self.id - 1
 
-	def register(self, target, attributes):
+	def register(self, attributes, target="unconfirmed"):  # interchanged and added default
 		"""Add new user to database"""
 		if self.check_user(target, attributes):
-			self.add(target, attributes)
+			stasus_unconfirmed = True if target == "unconfirmed" else False
+			self.add(target, attributes, status_unconfirmed=stasus_unconfirmed)
 			return True
 		else:
 			return False
@@ -54,16 +58,108 @@ class Core:
 		else:
 			return None
 
-	def delete(self, id, attributes):
-		"""Delete item from database"""
-		if attributes != dict():
-			return None
-		else:
-			return self.db.delete(int(id))
+	def search(self, string):
+		pass
 
-	def modify(self, id, attributes):
+	@staticmethod
+	def check_available_copy(copy):
+		return copy['attributes']['user_id'] is None
+
+	@staticmethod
+	def get_overdue(item):
+		if not Core.check_available_copy(item):
+			return (datetime.datetime.now() - datetime.datetime.strptime(item['attributes']['deadline'], '%d/%m/%Y')).days
+		else:
+			return None
+
+	def check_overdue(self, i):
+		overdue = self.get_overdue(i)
+		if overdue is None or overdue <= 0:
+			return False
+		else:
+			return True
+
+	def get_overdue_by_id(self, copy_id):
+		item = self.find_by_id(copy_id)
+		if item['type'] != 'copy':
+			return None
+		return Core.get_overdue(item)
+
+	def get_all_users_with_overdue(self):
+		users = set()
+		copies = self.find('copy', dict())
+		for i in copies:
+			if self.check_overdue(i):
+				users.add(i['attributes']['user_id'])
+		if users:
+			users = self.courteous_find({"$or": [{"id": i} for i in users]})
+		return list(users)
+
+	def get_all_unconfirmed_users(self):
+		return list(self.db.courteous_lookup({"type":"unconfirmed"}))
+		# return list(self.db.courteous_lookup({"id":{"$lt":0}}))
+
+	def delete_available_copies(self, book_id):
+		copies = self.find('copy', {'origin_id': book_id})
+		for i in copies:
+			if self.check_available_copy(i):
+				self.delete(i['id'])
+
+	def delete_book(self, book_id):
+		copies = self.find('copy', {'origin_id': book_id})
+		if all(self.check_available_copy(i) for i in copies):
+			self.delete_available_copies(book_id)
+			self.delete(book_id)
+			return True
+		else:
+			return False
+
+	def add_document_with_copies(self, target, attributes, n):
+		id = self.add(target, attributes)
+		for i in range(n):
+			self.add_copy(id)
+
+	def get_all_checked_out_documents(self):
+		documents = set()
+		copies = self.find('copy', dict())
+		for i in copies:
+			if not self.check_available_copy(i):
+				documents.add(i['attributes']['origin_id'])
+		if documents:
+			documents = self.courteous_find({"$or": [{"id": i} for i in documents]})
+		return list(documents)
+
+	def courteous_find(self, attributes):
+		return self.db.courteous_lookup(attributes)
+
+	def find_all_documents(self):
+		return self.courteous_find({"$or":[{'type': i['type']} for i in self.documents]})
+
+	def find_all_users(self):
+		return self.courteous_find({"$or":[{'type': i['type']} for i in self.users]})
+
+	def find_by_id(self, some_id):
+		return self.db.get_by_id(some_id)
+
+	def delete(self, some_id, attributes = None):
+		"""Delete item from database"""
+		return self.db.delete(some_id)
+
+	def modify(self, some_id, attributes, new_type=None):
 		"""Modify item in database"""
-		return self.db.modify(int(id), attributes)
+		old_attributes = self.find_by_id(some_id)['attributes']
+		if attributes is not None:
+			for item, value in attributes.items():
+				old_attributes[item] = value
+		if new_type:
+			return self.db.modify_and_change_type(some_id, attributes=old_attributes, type=new_type)
+		return self.db.modify(some_id, old_attributes)
+
+	def modify_user(self, user_id, attributes):
+		user = self.find_by_id(user_id)
+		for item, value in attributes.items():
+			user['attributes'][item] = value
+		self.db.modify(user_id, user['attributes'])
 
 	def check_document(self, type, attributes):
 		"""Check if type and attributes are correct"""
@@ -97,7 +193,10 @@ class Core:
 		"""Check if current type of a user exists"""
 		return any(i['type'] == type for i in self.users)
 
-	def login(self, login, password):
+	def login(self, login=None, password=None):
+		if login is password is None:
+			self.current_user = None
+			return True
 		"""Change current user"""
 		if login == password == '':
 			for i in self.users:
@@ -108,27 +207,28 @@ class Core:
 		user = self.db.lookup('', {'login': login, 'password': password})
 		if user:
 			self.current_user = user[0]
+			# raise Exception("yeah")
 			self.permissions = self.get_permissions(user[0])
 			return True
 		else:
 			return False
 
-	def add_copy(self, id, attributes):
+	def add_copy(self, some_id, attributes = None):
 		"""Add copy to database"""
-		document = self.db.get_by_id(int(id))
+		document = self.db.get_by_id(some_id) #RISHAT CHANGED int(id) to id
 		if self.check_document_type(document['type']) and 'reference-book' != document['type']:
-			self.add('copy', {'origin_id': id, 'user_id': None, 'deadline': ''})
+			self.add('copy', {'origin_id': some_id, 'user_id': None, 'deadline': ''})
 			return True
 		else:
 			return False
 
-	def check_out(self, id, attributes):
+	def check_out(self, some_id, attributes):
 		"""Checkout document"""
 		if attributes != dict():
 			return None
-		if any([i['attributes']['origin_id'] == id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
+		if any([i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
 			return False
-		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id and i['attributes']['user_id'] is None]
+		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] is None]
 		if not found:
 			return False
 		else:
@@ -136,36 +236,32 @@ class Core:
 			item['attributes']['user_id'] = self.current_user['id']
 			if self.current_user['type'] == 'faculty':
 				duration = 28
-			elif self.db.get_by_id(int(id))['type'] == 'best-seller':
+			elif self.db.get_by_id(some_id)['type'] == 'best_seller':
 				duration = 14
 			else:
 				duration = 21
 			item['attributes']['deadline'] = (datetime.datetime.now() + datetime.timedelta(days = duration)).strftime('%d/%m/%Y')
+			self.modify(item['id'], item['attributes'])
 			return True
 
-	def give_back(self, id, attributes):
+	def give_back(self, copy_id, attributes=None):
 		"""Return document"""
-		if attributes != dict():
+		item = self.find_by_id(copy_id)
+		if not item:
 			return None
-		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == int(id) and i['attributes']['user_id'] == self.current_user['id']]
-		if not found:
-			return False
 		else:
-			item = found[0]
-			overdue = (datetime.datetime.now() - datetime.datetime.strptime(item['attributes']['deadline'], '%d/%m/%Y')).days
-			fines = max(0, min(int(self.db.get_by_id(item['attributes']['price'])), overdue * 100))
-			if fines != 0:
-				return "You have to pay {} RUB".format(fines)
-			else:
-				return True
+			overdue = Core.get_overdue(item)
+			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100))
+			self.modify(item['id'], {'origin_id': item['attributes']['origin_id'], 'user_id': None, 'deadline': ''})
+			return fines
 
-	def check_copies(self, id, attributes):
-		if id == '':
+	def check_copies(self, some_id, attributes):
+		if some_id == '':
 			return self.find('copy', {})
 		else:
-			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id]
+			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id]
 
-	def drop(self, id, attributes):
+	def drop(self, some_id, attributes):
 		"""Clear database"""
 		self.db.drop()
 		self.current_user = None

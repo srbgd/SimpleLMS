@@ -3,7 +3,8 @@ import json
 
 
 class DataBase:
-	"""	Database class"""
+	"""	Database class
+	Used before mongo database"""
 
 	db = []
 	"""List if items"""

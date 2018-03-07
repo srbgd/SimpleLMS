@@ -1,0 +1,10 @@
+{% extends "basic.html" %}
+
+{% block content %}
+            <ul class="nav nav-pills flex-column">
+				<li class="nav-item"><a class="nav-link" href="{{ url_for('add_document', action_id=1) }}">Book</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('add_document', action_id=2) }}">Reference book</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('add_document', action_id=3) }}">Journal Article</a></li>
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('add_document', action_id=4) }}">Audio / Video</a></li>
+			  </ul>
+{% endblock %}

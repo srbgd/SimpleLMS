@@ -1,0 +1,16 @@
+{% extends "basic.html" %}
+
+{% block content %}
+<div class="well bs-sidebar" id="sidebar" style="background-color:#fff">
+    <ul class="nav nav-pills flex-column">
+        <h5 style="margin-left:15px">Found: {{users|length}}</h5>
+        <li class="nav-item" style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><span class="lists">Login</span>
+            <span class="lists">Name</span>
+        </li>
+    {% for user in users%}
+        <li class="nav-item" style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" ><a class="lists" href="{{ url_for('edit_profile', user_id=user.id)}}"> {{user.attributes.login}}</a>
+            <span class="lists">{{user.attributes.name}}</span></p></li>
+    {% endfor %}
+    </ul>
+    </div>
+{% endblock %}
