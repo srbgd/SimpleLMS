@@ -53,7 +53,7 @@ class Core:
 
 	def find(self, type, attributes):
 		"""Find item in database"""
-		if self.check_document_type(type) or self.check_user_type(type) or type == '' or type == 'copy':
+		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request']:
 			return self.db.lookup(type, attributes)
 		else:
 			return None
@@ -96,8 +96,7 @@ class Core:
 		return list(users)
 
 	def get_all_unconfirmed_users(self):
-		return list(self.db.courteous_lookup({"type":"unconfirmed"}))
-		# return list(self.db.courteous_lookup({"id":{"$lt":0}}))
+		return list(self.db.courteous_lookup({"type": "unconfirmed"}))
 
 	def delete_available_copies(self, book_id):
 		copies = self.find('copy', {'origin_id': book_id})
@@ -109,10 +108,16 @@ class Core:
 		copies = self.find('copy', {'origin_id': book_id})
 		if all(self.check_available_copy(i) for i in copies):
 			self.delete_available_copies(book_id)
+			self.delete_all_requests(book_id)
 			self.delete(book_id)
 			return True
 		else:
 			return False
+
+	def delete_all_requests(self, doc_id):
+		requests = [i for i in self.find('request', {}) if i['attributes']['target_id'] == doc_id]
+		for i in requests:
+			self.delete(i['id'])
 
 	def add_document_with_copies(self, target, attributes, n):
 		id = self.add(target, attributes)
@@ -193,11 +198,11 @@ class Core:
 		"""Check if current type of a user exists"""
 		return any(i['type'] == type for i in self.users)
 
-	def login(self, login=None, password=None):
+	def login(self, login = None, password = None):
+		"""Change current user"""
 		if login is password is None:
 			self.current_user = None
 			return True
-		"""Change current user"""
 		if login == password == '':
 			for i in self.users:
 				for j in i['permissions']:
@@ -207,7 +212,6 @@ class Core:
 		user = self.db.lookup('', {'login': login, 'password': password})
 		if user:
 			self.current_user = user[0]
-			# raise Exception("yeah")
 			self.permissions = self.get_permissions(user[0])
 			return True
 		else:
@@ -215,28 +219,82 @@ class Core:
 
 	def add_copy(self, some_id, attributes = None):
 		"""Add copy to database"""
-		document = self.db.get_by_id(some_id) #RISHAT CHANGED int(id) to id
+		document = self.db.get_by_id(some_id)
 		if self.check_document_type(document['type']) and 'reference-book' != document['type']:
 			self.add('copy', {'origin_id': some_id, 'user_id': None, 'deadline': ''})
 			return True
 		else:
 			return False
 
-	def check_out(self, some_id, attributes):
-		"""Checkout document"""
-		if attributes != dict():
-			return None
-		if any([i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] == self.current_user['id'] for i in self.find('copy', {})]):
+	def request(self, doc_id, action):
+		if action not in ['check-out', 'return']:
 			return False
-		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id and i['attributes']['user_id'] is None]
+		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'actions': action}
+		if self.find(type, attributes):
+			return False
+		else:
+			self.add(type, attributes)
+			return True
+
+	def approve(self, request_id, action):
+		request = self.find_by_id(request_id)
+		if request['type'] != 'request':
+			return False
+		elif request['attributes']['action'] != action:
+			return False
+		elif self.current_user['type'] != 'librarian':
+			return False
+		else:
+			self.delete(request_id)
+			if action == 'check-out':
+				return self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
+			if action == 'return':
+				return self.give_back(request['attributes']['target_id'])
+			return False
+
+	def decline(self, request_id, action):
+		request = self.find_by_id(request_id)
+		if request['type'] != 'request':
+			return False
+		elif request['attributes']['action'] != action:
+			return False
+		elif self.current_user['type'] != 'librarian':
+			return False
+		else:
+			return self.delete(request_id)
+
+	def request_check_out(self, doc_id):
+		return self.request(doc_id, 'check-out')
+
+	def approve_check_out(self, request_id):
+		return self.approve(request_id, 'check-out')
+
+	def decline_check_out(self, request_id):
+		return self.decline(request_id, 'check-out')
+
+	def request_return(self, doc_id):
+		return self.request(doc_id, 'return')
+
+	def approve_return(self, request_id):
+		return self.approve(request_id, 'return')
+
+	def decline_return(self, request_id):
+		return self.decline(request_id, 'return')
+
+	def check_out(self, doc_id, user_id):
+		"""Checkout document"""
+		if any([i['attributes']['origin_id'] == doc_id and i['attributes']['user_id'] == user_id for i in self.find('copy', {})]):
+			return False
+		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == doc_id and i['attributes']['user_id'] is None]
 		if not found:
 			return False
 		else:
 			item = found[0]
-			item['attributes']['user_id'] = self.current_user['id']
-			if self.current_user['type'] == 'faculty':
+			user = self.find_by_id(user_id)
+			item['attributes']['user_id'] = user_id
+			if user['type'] == 'faculty':
 				duration = 28
-			elif self.db.get_by_id(some_id)['type'] == 'best_seller':
+			elif self.db.get_by_id(doc_id)['type'] == 'best_seller':
 				duration = 14
 			else:
 				duration = 21
@@ -244,7 +302,7 @@ class Core:
 			self.modify(item['id'], item['attributes'])
 			return True
 
-	def give_back(self, copy_id, attributes=None):
+	def give_back(self, copy_id):
 		"""Return document"""
 		item = self.find_by_id(copy_id)
 		if not item:
@@ -252,7 +310,7 @@ class Core:
 		else:
 			overdue = Core.get_overdue(item)
 			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100))
-			self.modify(item['id'], {'origin_id': item['attributes']['origin_id'], 'user_id': None, 'deadline': ''})
+			self.modify(item['id'], {'user_id': None, 'deadline': ''})
 			return fines
 
 	def check_copies(self, some_id, attributes):
