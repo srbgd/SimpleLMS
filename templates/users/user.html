@@ -9,11 +9,20 @@
     <div><h5> Card number: <b>{{ a_user.attributes["card-number"]}}</b></h5></div>
     <h5> <a href=" {{url_for('edit_profile', user_id = a_user.id)}}"> Edit</a></h5>
      <h5> <a href=" {{url_for('change_password', user_id = a_user.id)}}"> Change password</a></h5>
+    {%if user.type == "librarian"%}
+        <h5> <a href=" {{url_for('delete_user', user_id = a_user.id)}}">Delete</a></h5>
+    {%endif%}
     <h5>Holding Documents:</h5>
     {% if documents %}
         {% for name in documents %}
-            <p> <a href="{{url_for('document', doc_id=copies[loop.index0].attributes.origin_id)}}"> {{name}}</a>.
-            Deadline: {{copies[loop.index0].attributes.deadline}}
+            <p> <a href="{{url_for('document', doc_id=copies[loop.index0].attributes.origin_id)}}"> {{name}}</a>:
+                <span style="margin-left:30px; margin-right:30px">Deadline: {{copies[loop.index0].attributes.deadline}} </span>
+            {% if overdue[loop.index0] > 0 %}
+                Overdue: {{overdue[loop.index0]}}
+            {% else %}
+                {% set over = -overdue[loop.index0]%}
+                {{over}} day(s) left
+            {% endif %}
             </p>
         {%endfor%}
     {%endif%}

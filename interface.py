@@ -2,7 +2,7 @@ from core import Core
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 from config import Config
-from forms import LoginForm, RegistrationForm, EditProfileForm, ChangePasswordForm, SearchForm
+from forms import LoginForm, RegistrationForm, EditProfileForm, ChangePasswordForm, SearchForm, ApproveForm
 from forms import AddBookForm, AddReferenceBookForm, AddJournalForm, AddAVForm, AddCopies
 
 import json
@@ -20,7 +20,7 @@ def documents():
 	search_form = SearchForm()
 	if search_form.validate_on_submit():
 		return search_results(search_form)
-	return render_template('documents/documents.html', documents=core.find_all_documets(), user=core.current_user, search_form=search_form)
+	return render_template('documents/documents.html', documents=core.find_all_documents(), user=core.current_user, search_form=search_form)
 
 
 @app.route('/check_out/<int:doc_id>')
@@ -40,6 +40,11 @@ def check_out(doc_id):
 def users():
 	"""rendering page of all users"""
 	return render_template("users/users.html", users = core.find_all_users(), user = core.current_user)
+
+
+@app.route("/overdue_users")
+def overdue_users():
+	return render_template("users/users.html", users=core.get_all_users_with_overdue(), user=core.current_user)
 
 
 def can_check_out():
@@ -73,7 +78,7 @@ def add_n_copies(origin_id, n):
 def return_document(copy_id):
 	"""rendering returning copy with id=copy_id"""
 	if can_modify():
-		if core.give_back(copy_id, dict()):
+		if core.give_back(copy_id, dict()) is not None:
 			flash("Returned book with id {}".format(copy_id))
 		else:
 			flash("Failed to return book with id {}".format(copy_id))
@@ -87,20 +92,47 @@ def document(doc_id):
 	document = core.find_by_id(doc_id)
 	if document["type"] != "student" and document["type"] != "faculty" and document["type"] != "librarian":
 		copies = core.courteous_find({"attributes.origin_id":doc_id})
-		available_copies = []
+		available_copies = 0
 
 		held_copies = []
 		for copy in copies:
 			if copy['attributes']['user_id'] is None:
-				available_copies.append(copy)
+				available_copies += 1
 			else:
 				held_copies.append(copy)
 		names = users_names(held_copies)
 		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=core.current_user,
 							   available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
-							   names=names)
+							   names=names, overdue_days=overdue_days(held_copies))
 	else:
 		return redirect(url_for('sorry'))
+
+
+@app.route('/delete_copy/<int:origin_id>')
+def delete_copy(origin_id):
+	if can_modify():
+		core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})
+		return redirect(url_for("document", doc_id=origin_id))
+	else:
+		return redirect(url_for("sorry"))
+
+
+@app.route('/delete_copies/<int:origin_id>')
+def delete_copies(origin_id):
+	if can_modify():
+		core.delete_available_copies(origin_id)
+	else:
+		return redirect(url_for("sorry"))
+
+
+def overdue_days(copies):
+	overdue_days = []
+	for copy in copies:
+		overdue_days.append(get_overdue(copy))
+
+
+def get_overdue(copy):
+	return core.get_overdue(copy)
 
 
 def users_names(copies):
@@ -164,8 +196,11 @@ def edit_document(doc_id):
 def delete_document(doc_id):
 	"""rendering removing documents"""
 	if can_modify():
-		core.delete(doc_id, dict())
-		return redirect(url_for("documents"))
+		if core.delete_book(doc_id):
+			return redirect(url_for("documents"))
+		else:
+			flash("Failed to delete document with doc_id={}, document has held copies".format(doc_id))
+			return redirect(url_for("document", doc_id=doc_id))
 	else:
 		return redirect(url_for('sorry'))
 
@@ -177,6 +212,15 @@ def add_documents():
 		return render_template('documents/add_documents.html', user=core.current_user)
 	else:
 		return redirect(url_for('sorry'))
+
+
+@app.route('/checked_out')
+def checked_out():
+	if can_modify():
+		checked_out = core.get_all_checked_out_documents()
+		return render_template("documents/checked_out.html", documents = checked_out, user = core.current_user)
+	else:
+		return redirect(url_for("sorry"))
 
 
 @app.route('/add_document/<int:action_id>', methods=["GET", "POST"])
@@ -212,15 +256,24 @@ def add_document(action_id):
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			core.add(target=target, attributes=new_attributes)
+			core.add_document_with_copies(target=target, attributes=new_attributes, n = form['copies'].data)
 			return redirect(url_for('add_documents'))
 		return render_template("documents/add_document.html", title='Add document', form=form, attributes=attributes, user=core.current_user)
 	else:
 		return redirect(url_for('sorry'))
 
 
-
-
+@app.route('/delete_user/<int:user_id>')
+def delete_user(user_id):
+	if can_modify(user_id):
+		copies = get_copies(user_id)
+		print(copies)
+		if len(copies) > 0:
+			flash("Failed to delete user with id {}. He has documents to return".format(user_id))
+			return redirect(url_for("user", user_id=user_id))
+		return redirect(url_for("users"))
+	else:
+		return redirect(url_for("sorry"))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -241,7 +294,8 @@ def user(user_id):
 	if can_modify(user_id):
 		copies = get_copies(user_id)
 		documents_names = user_documents_names(copies)
-		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies, documents=documents_names)
+		overdue = [get_overdue(copy) for copy in copies]
+		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies, documents=documents_names, overdue=overdue)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -256,6 +310,7 @@ def user_documents_names(copies):
 	documents_names = []
 	for copy in copies:
 		documents_names.append(core.find_by_id(copy['attributes']['origin_id'])['attributes']['title'])
+
 	return documents_names
 
 
@@ -278,11 +333,22 @@ def edit_profile(user_id):
 	"""rendering editing profile page"""
 	if can_modify(user_id):
 		form = EditProfileForm()
+		approve_form = ApproveForm(request.form)
 		user = core.find_by_id(user_id)
 		if form.validate_on_submit():
+			print(approve_form.type.data)
+			print(type(approve_form.type.data))
+			print(approve_form.type.data is None)
+			if approve_form.type.data == "None":
+				new_type = user['type']
+				print("yeah, none")
+			else:
+				new_type = approve_form.type.data
 			attributes = {"login":form.login.data, "name": form.name.data,
 													"address": form.address.data, "phone-number": form.phone_number.data, "card-number": form.card_number.data}
-			core.modify_user(user_id, attributes)
+			# core.modify_user(user_id, attributes)
+			print(approve_form.type.data, user['type'], new_type)
+			core.modify(some_id=user_id, attributes=attributes, new_type=new_type)
 			flash('Your changes have been saved.')
 			return redirect(url_for('user', user_id=user_id))
 		elif request.method == 'GET':
@@ -291,8 +357,10 @@ def edit_profile(user_id):
 			form.address.data = user['attributes']['address']
 			form.phone_number.data = user['attributes']['phone-number']
 			form.card_number.data = user['attributes']['card-number']
+			if "modify" not in core.get_permissions(core.current_user):
+				approve_form = None
 		return render_template('users/edit_profile.html', title='Edit Profile',
-							   form=form, user=user)
+							   form=form, user=user, approve_form=approve_form)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -334,11 +402,26 @@ def register():
 		new_user = {"login": form.login.data, "password": form.password.data, "name" : form.name.data,
 													"address": form.address.name, "phone-number": form.phone_number.data,
 													"card-number": form.card_number.data}
-		if core.register(form.type.data, new_user):
+		# if core.register(form.type.data, new_user):
+		if core.register(new_user):
 			flash('Register requested for user {}'.format(
 				form.login.data))
 			return redirect(url_for('login'))
 	return render_template('users/register.html', title='Register', form=form, user=core.current_user)
+
+
+@app.route('/registration_requests')
+def registration_requests():
+	if can_modify():
+		users = core.get_all_unconfirmed_users()
+		return render_template("users/registration_requests.html", user=core.current_user, users=users)
+	else:
+		return redirect(url_for("sorry"))
+
+# @app.route('/approve/<int:user_id>')
+# def approve(user_id, methods=['GET', 'POST']):
+# 	form = ApproveForm(request.form)
+
 
 
 if __name__ == '__main__':

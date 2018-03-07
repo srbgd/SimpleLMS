@@ -13,5 +13,11 @@
     "type": "student",
     "permissions": ["find", "checkout", "return"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  },
+  {
+    "type": "unconfirmed",
+    "permissions": ["find"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   }
 ]
+

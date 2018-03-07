@@ -19,6 +19,11 @@
 		.in_block {
 			display:inline-block;
 		}
+		.lists {
+			font-size:1.15em;
+			width:22%;
+			float:left
+		}
 	</style>
 </head>
 
@@ -80,6 +85,9 @@
 				  		{% if user.type == "librarian" %}
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('add_documents') }}">Add document</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('users') }}">Users</a></li>
+				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('checked_out') }}"> Checked out</a></li>
+				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('overdue_users') }}"> Overdue users</a></li>
+				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('registration_requests') }}"> Unconfirmed users</a></li>
 				  		{% endif %}
 				  {% else %}
 				<li class="nav-item"> <a class="nav-link" href="{{ url_for('login') }}">Login</a></li>

@@ -7,6 +7,14 @@
         <p>{{form.is_best_seller.label}}</p>
         <p>{{form.is_best_seller()}}</p>
     {% endif %}
+        {% if form.copies %}
+        <p>{{ form.copies.label}}</p>
+        <p>{{ form.copies}}</p>
+         {% for error in form.copies.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %} </p>
+
+        {% endif %}
         {{ form.hidden_tag() }}
          {% for item in attributes %}
                 <p>{{ form[item].label}}</p>
@@ -17,9 +25,8 @@
             {% endfor %}
         {%if user.type == "librarian" and add_copies%}
         <p>{{add_copies.number.label}}</p>
-        <p>{{add_copies.number()}}</p>
+        <p>{{add_copies.number}}</p>
         {%endif%}
         <p>{{ form.submit() }}</p>
-
     </form>
 {% endblock %}

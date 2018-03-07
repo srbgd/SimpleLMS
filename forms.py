@@ -14,11 +14,13 @@ class LoginForm(FlaskForm):
 
 
 class EditProfileForm(FlaskForm):
+    # type = SelectField('Status', choices=[('unconfirmed', 'Unconfirmed'), ('faculty', 'Faculty'), ('student', 'Student'), ('librarian', 'Librarian')])
     login = StringField('Login', validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
     address = StringField('Address', validators=[DataRequired()])
     phone_number = StringField('Phone number', validators=[DataRequired()])
     card_number = StringField('Card number', validators=[DataRequired()])
+
     submit = SubmitField('Submit')
 
 
@@ -39,6 +41,7 @@ class AddBookForm(FlaskForm):
     date = StringField('Date', validators=[DataRequired()])
     is_best_seller = SelectField('Is bestseller', choices=[('best-seller', 'Yes'), ('book','No')], validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
+    copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 
@@ -58,6 +61,7 @@ class AddJournalForm(FlaskForm):
     editors = StringField('Edition', validators=[DataRequired()])
     date = StringField('Date', validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
+    copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 
@@ -65,6 +69,7 @@ class AddAVForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     authors = StringField('Authors', validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
+    copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 
@@ -78,7 +83,7 @@ class ChangePasswordForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    type = SelectField('Status', choices=[('faculty', 'Faculty'), ('student','Student'), ('librarian','Librarian')], validators=[DataRequired()])
+    # type = SelectField('Status', choices=[('faculty', 'Faculty'), ('student','Student'), ('librarian','Librarian')], validators=[DataRequired()])  # TODO: DELETE
     login = StringField('Login', [DataRequired()])
     password = PasswordField('New Password', [
         DataRequired(),
@@ -89,4 +94,11 @@ class RegistrationForm(FlaskForm):
     address = StringField('Address', validators=[DataRequired()])
     phone_number = StringField('Phone number', validators=[DataRequired()])
     card_number = StringField('Card Number', validators=[DataRequired()])
+    submit = SubmitField('Register', validators=[DataRequired()])
+
+
+class ApproveForm(FlaskForm):
+    type = SelectField('Status',
+                       choices=[('unconfirmed', 'Unconfirmed'), ('faculty', 'Faculty'), ('student', 'Student'),
+                                ('librarian', 'Librarian')])
     submit = SubmitField('Register', validators=[DataRequired()])
