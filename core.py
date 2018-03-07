@@ -249,12 +249,14 @@ class Core:
 		elif self.current_user['type'] != 'librarian':
 			return False
 		else:
-			self.delete(request_id)
+			result = False
 			if action == 'check-out':
-				return self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
+				result = self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
 			if action == 'return':
-				return self.give_back(request['attributes']['target_id'])
-			return False
+				result = self.give_back(request['attributes']['target_id'])
+			if result:
+				self.delete(request_id)
+			return result
 
 	def decline(self, request_id, action):
 		request = self.find_by_id(request_id)

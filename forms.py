@@ -39,9 +39,9 @@ class AddBookForm(FlaskForm):
     publisher = StringField('Publisher', validators=[DataRequired()])
     edition = StringField('Edition', validators=[DataRequired()])
     date = StringField('Date', validators=[DataRequired()])
-    is_best_seller = SelectField('Is bestseller', choices=[('best-seller', 'Yes'), ('book','No')], validators=[DataRequired()])
+    is_best_seller = SelectField('Is bestseller', choices=[('best_seller', 'Yes'), ('book','No')], validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
-    copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
+    # copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 
@@ -61,7 +61,7 @@ class AddJournalForm(FlaskForm):
     editors = StringField('Edition', validators=[DataRequired()])
     date = StringField('Date', validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
-    copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
+    # copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 
@@ -69,7 +69,7 @@ class AddAVForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     authors = StringField('Authors', validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
-    copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
+    # copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
     submit = SubmitField('Submit')
 
 

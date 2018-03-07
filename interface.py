@@ -199,11 +199,11 @@ def edit_document(doc_id):
 			form = AddAVForm()
 			attributes = doc_attributes[4]["attributes"]
 		if form.validate_on_submit():
-			flash('Adding document {}'.format(form.title))
+			flash('Edited document {}'.format(form.title))
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			core.modify(doc_id, new_attributes)
+			core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
 			add_n_copies(doc_id, add_copies.number.data)
 			return redirect(url_for("document", doc_id=doc_id))
 		elif request.method == 'GET':
@@ -256,9 +256,10 @@ def add_document(action_id):
 	3: journal article
 	4: audio_video """
 	if can_modify() and action_id > 0 and action_id < 5:
+		add_copies = AddCopies()
 		if action_id == 1:
 			form = AddBookForm()
-			if form['is_best_seller'].data == 'best-seller':
+			if form['is_best_seller'].data == 'best_seller':
 				target = 'best_seller'
 			else:
 				target = 'book'
@@ -280,9 +281,10 @@ def add_document(action_id):
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			core.add_document_with_copies(target=target, attributes=new_attributes, n = form['copies'].data)
+			n = add_copies.number.data if add_copies.number.data is not None else 0
+			core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
 			return redirect(url_for('add_documents'))
-		return render_template("documents/add_document.html", title='Add document', form=form, attributes=attributes, user=core.current_user)
+		return render_template("documents/add_document.html", title='Add document', form=form, attributes=attributes, user=core.current_user, add_copies=add_copies)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -295,6 +297,7 @@ def delete_user(user_id):
 		if len(copies) > 0:
 			flash("Failed to delete user with id {}. He has documents to return".format(user_id))
 			return redirect(url_for("user", user_id=user_id))
+		core.db.delete(user_id)
 		return redirect(url_for("users"))
 	else:
 		return redirect(url_for("sorry"))
@@ -482,14 +485,18 @@ def documents_requests():
 			if forms[i].validate_on_submit():
 				if forms[i].approve.data:
 					if requests[i]['attributes']['action'] == "check-out":
-						core.approve_check_out(requests[i]['id'])
+						if not core.approve_check_out(requests[i]['id']):
+							flash("failed")
 					else:
-						core.approve_return(requests[i]['id'])
+						if not core.approve_return(requests[i]['id']):
+							flash("failed")
 				elif forms[i].decline.data:
 					if requests[i]['attributes']['action'] == "check-out":
-						core.decline_check_out(requests[i]['id'])
+						if not core.decline_check_out(requests[i]['id']):
+							flash("failed")
 					else:
-						core.decline_return(requests[i]['id'])
+						if not core.decline_return(requests[i]['id']):
+							flash("failed")
 				return redirect(url_for("documents_requests"))
 		return render_template("documents/documents_requests.html", user=core.current_user, requests=requests, users=users, documents=documents, forms=forms)
 	else:

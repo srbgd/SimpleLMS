@@ -7,7 +7,7 @@
         <p>{{form.is_best_seller.label}}</p>
         <p>{{form.is_best_seller()}}</p>
     {% endif %}
-        {% if form.copies %}
+        {% if form.copies and in_add%}
         <p>{{ form.copies.label}}</p>
         <p>{{ form.copies}}</p>
          {% for error in form.copies.errors %}
