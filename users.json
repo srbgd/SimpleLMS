@@ -1,7 +1,7 @@
 [
   {
     "type": "librarian",
-    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy"],
+    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy", "approve", "decline"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
@@ -15,9 +15,8 @@
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
-    "type": "unconfirmed",
-    "permissions": ["find"],
+    "type": "visiting-professor",
+    "permissions": ["find", "checkout", "return"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   }
 ]
-
