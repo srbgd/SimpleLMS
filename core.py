@@ -1,7 +1,5 @@
-from mongo_database import DataBase
 from command import Command
 import datetime
-import sys
 import json
 
 
@@ -35,11 +33,10 @@ class Core:
 			return -(self.id - 1)
 		return self.id - 1
 
-	def register(self, attributes, target="unconfirmed"):  # interchanged and added default
+	def register(self, target, attributes):  # interchanged and added default
 		"""Add new user to database"""
 		if self.check_user(target, attributes):
-			stasus_unconfirmed = True if target == "unconfirmed" else False
-			self.add(target, attributes, status_unconfirmed=stasus_unconfirmed)
+			self.add(target, attributes, status_unconfirmed = target == 'unconfirmed')
 			return True
 		else:
 			return False
@@ -54,10 +51,7 @@ class Core:
 
 	def find(self, type, attributes):
 		"""Find item in database"""
-		print(type, attributes)
-		sys.stdout.flush()
-
-		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request']:
+		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request', 'renew']:
 			return self.db.lookup(type, attributes)
 		else:
 			return None
@@ -76,6 +70,13 @@ class Core:
 		else:
 			return None
 
+	def get_fine(self, item):
+		overdue = Core.get_overdue(item)
+		if overdue is None or overdue <= 0:
+			return 0
+		price = int(self.find_by_id(int(item['attributes']['origin_id']))['attributes']['price'])
+		return min(overdue * 100, price)
+
 	def check_overdue(self, i):
 		overdue = self.get_overdue(i)
 		if overdue is None or overdue <= 0:
@@ -83,11 +84,23 @@ class Core:
 		else:
 			return True
 
+	def check_fine(self, i):
+		if self.get_fine(i):
+			return True
+		else:
+			return False
+
 	def get_overdue_by_id(self, copy_id):
 		item = self.find_by_id(copy_id)
 		if item['type'] != 'copy':
 			return None
 		return Core.get_overdue(item)
+
+	def get_fine_by_id(self, copy_id):
+		item = self.find_by_id(copy_id)
+		if item['type'] != 'copy':
+			return None
+		return self.get_fine(item)
 
 	def get_all_users_with_overdue(self):
 		users = set()
@@ -147,22 +160,22 @@ class Core:
 	def find_all_users(self):
 		return self.courteous_find({"$or":[{'type': i['type']} for i in self.users]})
 
-	def find_by_id(self, some_id):
-		return self.db.get_by_id(some_id)
+	def find_by_id(self, id):
+		return self.db.get_by_id(id)
 
-	def delete(self, some_id, attributes = None):
+	def delete(self, id, attributes = None):
 		"""Delete item from database"""
-		return self.db.delete(some_id)
+		return self.db.delete(id)
 
-	def modify(self, some_id, attributes=None, new_type=None):
+	def modify(self, id, attributes, new_type=None):
 		"""Modify item in database"""
-		old_attributes = self.find_by_id(some_id)['attributes']
+		old_attributes = self.find_by_id(id)['attributes']
 		if attributes is not None:
 			for item, value in attributes.items():
 				old_attributes[item] = value
 		if new_type:
-			return self.db.modify_and_change_type(some_id, attributes=old_attributes, type=new_type)
-		return self.db.modify(some_id, old_attributes)
+			return self.db.modify_and_change_type(id, attributes=old_attributes, type=new_type)
+		return self.db.modify(id, old_attributes)
 
 	def modify_user(self, user_id, attributes):
 		user = self.find_by_id(user_id)
@@ -221,11 +234,11 @@ class Core:
 		else:
 			return False
 
-	def add_copy(self, some_id, attributes = None):
+	def add_copy(self, id, attributes = None):
 		"""Add copy to database"""
-		document = self.db.get_by_id(some_id)
+		document = self.db.get_by_id(id)
 		if self.check_document_type(document['type']) and 'reference-book' != document['type']:
-			self.add('copy', {'origin_id': some_id, 'user_id': None, 'deadline': ''})
+			self.add('copy', {'origin_id': id, 'user_id': None, 'deadline': ''})
 			return True
 		else:
 			return False
@@ -233,12 +246,22 @@ class Core:
 	def request(self, doc_id, action):
 		if action not in ['check-out', 'return']:
 			return False
-		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'action': action}
+		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'actions': action}
 		if self.find(type, attributes):
 			return False
 		else:
 			self.add(type, attributes)
 			return True
+
+	def approve_cmd(self, id, attributes = None):
+		request = self.find_by_id(id)
+		action = request['attributes']['action']
+		return self.approve(id, action)
+
+	def decline_cmd(self, id, attributes = None):
+		request = self.find_by_id(id)
+		action = request['attributes']['action']
+		return self.decline(id, action)
 
 	def approve(self, request_id, action):
 		request = self.find_by_id(request_id)
@@ -249,14 +272,12 @@ class Core:
 		elif self.current_user['type'] != 'librarian':
 			return False
 		else:
-			result = False
+			self.delete(request_id)
 			if action == 'check-out':
-				result = self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
+				return self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
 			if action == 'return':
-				result = self.give_back(request['attributes']['target_id'])
-			if result:
-				self.delete(request_id)
-			return result
+				return self.give_back(request['attributes']['target_id'])
+			return False
 
 	def decline(self, request_id, action):
 		request = self.find_by_id(request_id)
@@ -278,14 +299,39 @@ class Core:
 	def decline_check_out(self, request_id):
 		return self.decline(request_id, 'check-out')
 
-	def request_return(self, copy_id):
-		return self.request(copy_id, 'return')
+	def request_return(self, doc_id):
+		return self.request(doc_id, 'return')
 
 	def approve_return(self, request_id):
 		return self.approve(request_id, 'return')
 
 	def decline_return(self, request_id):
 		return self.decline(request_id, 'return')
+
+	def get_queue(self, id):
+		priority = ['student', 'faculty', 'visiting-professor']
+		return sorted(self.find('request', {'origin_id': id, 'action': 'check-out'}), key = lambda x: priority.index(x))
+
+	@staticmethod
+	def get_duration(user_type, doc_type):
+		duration = 21
+		if user_type == 'visiting-professor':
+			duration = 7
+		if user_type == 'faculty':
+			duration = 28
+		elif doc_type == 'best_seller':
+			duration = 14
+		return datetime.timedelta(days = duration)
+
+	def renew(self, id, attributes = None):
+		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
+		if copy and not self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
+			if self.current_user['type'] != 'visiting-professor':
+				self.add('renew', {'user_id': self.current_user['id'], 'origin_id': id})
+			timedelta = Core.get_duration(self.current_user['type'], self.find_by_id(id)['type'])
+			self.modify(copy['id'], {'deadline': (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')})
+			return True
+		return False
 
 	def check_out(self, doc_id, user_id):
 		"""Checkout document"""
@@ -297,14 +343,10 @@ class Core:
 		else:
 			item = found[0]
 			user = self.find_by_id(user_id)
+			doc = self.db.get_by_id(doc_id)
 			item['attributes']['user_id'] = user_id
-			if user['type'] == 'faculty':
-				duration = 28
-			elif self.db.get_by_id(doc_id)['type'] == 'best_seller':
-				duration = 14
-			else:
-				duration = 21
-			item['attributes']['deadline'] = (datetime.datetime.now() + datetime.timedelta(days = duration)).strftime('%d/%m/%Y')
+			timedelta = Core.get_duration(user['type'], doc['type'])
+			item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
 			self.modify(item['id'], item['attributes'])
 			return True
 
@@ -314,18 +356,18 @@ class Core:
 		if not item:
 			return None
 		else:
-			overdue = Core.get_overdue(item)
+			overdue = self.get_overdue(item)
 			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100))
 			self.modify(item['id'], {'user_id': None, 'deadline': ''})
 			return fines
 
-	def check_copies(self, some_id, attributes):
-		if some_id == '':
+	def check_copies(self, id, attributes):
+		if id == '':
 			return self.find('copy', {})
 		else:
-			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == some_id]
+			return [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == id]
 
-	def drop(self, some_id, attributes):
+	def drop(self, id, attributes):
 		"""Clear database"""
 		self.db.drop()
 		self.current_user = None
@@ -334,8 +376,12 @@ class Core:
 		self.login('', '')
 		return True
 
-	def init_db(self):
+	def init_db(self, mode):
 		"""Initialize database"""
+		if mode:
+			from mongo_database import DataBase
+		else:
+			from database import DataBase
 		self.db = DataBase()
 
 	def init_map(self):
@@ -350,7 +396,9 @@ class Core:
 			'return': self.give_back,
 			'copy': self.add_copy,
 			'drop': self.drop,
-			'check': self.check_copies
+			'check': self.check_copies,
+			'approve': self.approve_cmd,
+			'decline': self.decline_cmd
 		}
 
 	def init_users(self):
@@ -374,11 +422,14 @@ class Core:
 		if cmd.cmd() in self.permissions:
 			return self.map[cmd.cmd()](cmd.target(), cmd.attributes())
 		else:
-			return "The current user doesn't have a permission to execute this command"
+			if cmd.cmd() not in self.map.keys():
+				return "Command not found"
+			else:
+				return "The current user doesn't have a permission to execute this command"
 
-	def __init__(self):
+	def __init__(self, mode):
 		"""Initialize class"""
-		self.init_db()
+		self.init_db(mode)
 		self.init_map()
 		self.init_users()
 		self.init_documents()

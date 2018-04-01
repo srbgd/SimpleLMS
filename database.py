@@ -3,13 +3,14 @@ import json
 
 
 class DataBase:
-	"""	Database class
-	Used before mongo database"""
+	"""Database class
+	Used before mongo database
+	Offline json database"""
 
 	db = []
 	"""List if items"""
 	file = 'db.json'
-	"""Name of database class"""
+	"""Name of database file"""
 
 	def __init__(self):
 		"""Initialize database"""
@@ -23,7 +24,7 @@ class DataBase:
 		json.dump(self.db, open(self.file, 'w'))
 
 	def add(self, item):
-		"""Add new iten to database"""
+		"""Add new item to database"""
 		self.db.append(item)
 		self.update()
 
@@ -60,5 +61,5 @@ class DataBase:
 		return found[0] if found else []
 
 	def get_max_id(self):
-		"""Get tne maximum id in database"""
+		"""Get the maximum id in database"""
 		return max(i['id'] for i in self.db) if self.db else -1
