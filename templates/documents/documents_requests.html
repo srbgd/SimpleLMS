@@ -1,0 +1,25 @@
+{% extends "basic.html" %}
+
+{% block content %}
+<div class="well bs-sidebar" id="sidebar" style="background-color:#fff">
+    <ul class="nav nav-pills flex-column">
+        <!--<h5 style="margin-left:15px">Found: {{users|length}}</h5>-->
+        <!--<li class="nav-item" style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><span class="lists">Login</span>-->
+            <!--<span class="lists">Name</span>-->
+        <!--</li>-->
+    {% for request in requests%}
+        <li style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" >
+            <p>{{request.attributes.action}}</p>
+            <span class="lists"> by {{users[loop.index0].attributes.name}} </span>
+            <span class="lists">document {{documents[loop.index0].attributes.title}}
+                <form action="" method="post">
+                {{ forms[loop.index0].hidden_tag() }}
+                {{forms[loop.index0].approve}}
+                {{forms[loop.index0].decline}}
+            </form></span>
+             </p>
+            </li>
+    {% endfor %}
+    </ul>
+    </div>
+{% endblock %}

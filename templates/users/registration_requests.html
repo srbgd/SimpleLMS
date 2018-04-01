@@ -8,8 +8,16 @@
             <span class="lists">Name</span>
         </li>
     {% for user in users%}
-        <li class="nav-item" style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" ><a class="lists" href="{{ url_for('edit_profile', user_id=user.id)}}"> {{user.attributes.login}}</a>
-            <span class="lists">{{user.attributes.name}}</span></p></li>
+        <li style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" ><a class="lists" href="{{ url_for('edit_profile', user_id=user.id)}}"> {{user.attributes.login}}</a>
+            <span class="lists">{{user.attributes.name}} <form action="" method="post">
+                {{ forms[loop.index0].hidden_tag() }}
+                {{forms[loop.index0].student}}
+                {{forms[loop.index0].faculty}}
+                {{forms[loop.index0].librarian}}
+                {{forms[loop.index0].decline}}
+            </form></span>
+             </p>
+            </li>
     {% endfor %}
     </ul>
     </div>

@@ -1,6 +1,7 @@
 {% extends "basic.html" %}
 
 {% block content %}
+    <div><h5> Status: <b>{{ a_user.type }}</b></h5></div>
     <div><h5> Username: <b>{{ a_user.attributes.login }}</b></h5></div>
     <div><h5> Name: <b>{{ a_user.attributes.name}}</b></h5></div>
     <div><h5> Phone-Number: <b>{{ a_user.attributes['phone-number']}}</b></h5></div>
