@@ -3,7 +3,7 @@ from core import Core
 from flask import Flask, render_template, request, redirect, url_for, flash
 from config import Config
 from forms import LoginForm, RegistrationForm, EditProfileForm, ChangePasswordForm, SearchForm, SelectForm, ApproveForm, ApproveDocumentForm
-from forms import AddBookForm, AddReferenceBookForm, AddJournalForm, AddAVForm, AddCopies
+from forms import AddBookForm, AddReferenceBookForm, AddJournalForm, AddAVForm, AddCopies, RenewForm
 
 import sys
 import json
@@ -91,7 +91,9 @@ def return_document(copy_id):
 def document(doc_id):
 	"""rendering document page with id=doc_id"""
 	document = core.find_by_id(doc_id)
+	print('test0')
 	if document["type"] != "student" and document["type"] != "faculty" and document["type"] != "librarian":
+		print('test1')
 		copies = core.courteous_find({"attributes.origin_id":doc_id})
 		available_copies = 0
 
@@ -106,18 +108,50 @@ def document(doc_id):
 			copy_id = core.find("copy", {"user_id": core.current_user['id'], "origin_id": doc_id})[0]['id']
 		else:
 			copy_id = 0
+		print('test2')
+		priority_queue = core.get_queue(doc_id)
+		print('test3')
+		print("requests", priority_queue)
+		print("can renew,", can_renew(doc_id))
+		names_and_types = get_names_and_types_from_queue(priority_queue)
 		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=core.current_user,
-							   available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
-							   names=names, overdue_days=overdue_days(held_copies), requested=user_requested(doc_id),
-								requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id, overdue=get_overdue(copy_id))
+								available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
+								names=names, overdue_days=overdue_days(held_copies), requested=user_requested(doc_id),
+								requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
+								overdue=get_overdue(copy_id), can_renew=can_renew(doc_id), priority_queue=priority_queue,
+								names_and_types=names_and_types)
 
 	else:
 		return redirect(url_for('sorry'))
 
 
-def user_requested_to_return(copy_id):
+def get_names_and_types_from_queue(priority_queue):
+	names_and_types = []
+	for request in priority_queue:
+		user = core.find_by_id(request['attributes']['user_id'])
+		names_and_types.append((user['attributes']['name'], user['type']))
+	return names_and_types
+
+
+def can_renew(doc_id):
+	if core.find(type="renew", attributes={"origin_id": doc_id,"user_id": core.current_user['id']}):
+		return False
+	return True
+
+
+@app.route("/renew/<int:doc_id>")
+def renew(doc_id):
+	if can_modify(core.current_user['id']):
+		if not core.renew(doc_id):
+			flash("Failed to renew book with id= {}".format(doc_id))
+		return redirect(url_for("document", doc_id=doc_id))
+	else:
+		return redirect(url_for("sorry"))
+
+
+def user_requested_to_return(doc_id):
 	if can_check_out():
-		return (core.find("request", {"action": "return", "target_id": copy_id, "user_id": core.current_user['id']})) != []
+		return (core.find("request", {"action": "return", "target_id": doc_id, "user_id": core.current_user['id']})) != []
 	else:
 		return False
 
@@ -142,6 +176,7 @@ def delete_copy(origin_id):
 def delete_copies(origin_id):
 	if can_modify():
 		core.delete_available_copies(origin_id)
+		return redirect(url_for("document", doc_id=origin_id))
 	else:
 		return redirect(url_for("sorry"))
 
@@ -150,11 +185,29 @@ def overdue_days(copies):
 	overdue_days = []
 	for copy in copies:
 		overdue_days.append(get_overdue(copy))
+	return overdue_days
 
 
 def get_overdue(copy):
 	try:
 		return core.get_overdue(copy)
+	except Exception:
+		return 0
+
+
+def overdue_days_and_fines(copies):
+	overdues_and_fines = []
+	sum = 0
+	for copy in copies:
+		pair = overdue_and_fine(copy)
+		overdues_and_fines.append(pair)
+		sum += pair[1]
+	return overdues_and_fines, sum
+
+
+def overdue_and_fine(copy):
+	try:
+		return core.get_overdue(copy), core.get_fine(copy)
 	except Exception:
 		return 0
 
@@ -203,8 +256,12 @@ def edit_document(doc_id):
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
-			add_n_copies(doc_id, add_copies.number.data)
+			try:
+				core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
+			except Exception:
+				core.modify(doc_id, new_attributes)
+			if add_copies:
+				add_n_copies(doc_id, add_copies.number.data)
 			return redirect(url_for("document", doc_id=doc_id))
 		elif request.method == 'GET':
 			old_attributes = core.find_by_id(doc_id)['attributes']
@@ -268,6 +325,7 @@ def add_document(action_id):
 			form = AddReferenceBookForm()
 			attributes = doc_attributes[1]["attributes"]
 			target = 'reference_book'
+			add_copies = None
 		elif action_id == 3:
 			form = AddJournalForm()
 			attributes = doc_attributes[3]["attributes"]
@@ -281,8 +339,11 @@ def add_document(action_id):
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			n = add_copies.number.data if add_copies.number.data is not None else 0
-			core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
+			if add_copies:
+				n = add_copies.number.data if add_copies.number.data is not None else 0
+				core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
+			else:
+				core.add(target=target, attributes=new_attributes)
 			return redirect(url_for('add_documents'))
 		return render_template("documents/add_document.html", title='Add document', form=form, attributes=attributes, user=core.current_user, add_copies=add_copies)
 	else:
@@ -321,8 +382,10 @@ def user(user_id):
 	if can_modify(user_id):
 		copies = get_copies(user_id)
 		documents_names = user_documents_names(copies)
-		overdue = [get_overdue(copy) for copy in copies]
-		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies, documents=documents_names, overdue=overdue)
+		# overdue = [get_overdue(copy) for copy in copies]
+		(overdues_and_fines, total_fine) = overdue_days_and_fines(copies)
+		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies,
+												documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -369,7 +432,7 @@ def edit_profile(user_id):
 				new_type = approve_form.type.data
 			attributes = {"login":form.login.data, "name": form.name.data,
 													"address": form.address.data, "phone-number": form.phone_number.data, "card-number": form.card_number.data}
-			core.modify(some_id=user_id, attributes=attributes, new_type=new_type)
+			core.modify(id=user_id, attributes=attributes, new_type=new_type)
 			flash('Your changes have been saved.')
 			return redirect(url_for('user', user_id=user_id))
 		elif request.method == 'GET':
@@ -424,10 +487,12 @@ def register():
 													"address": form.address.name, "phone-number": form.phone_number.data,
 													"card-number": form.card_number.data}
 		# if core.register(form.type.data, new_user):
-		if core.register(new_user):
+		if core.register("unconfirmed", new_user):
 			flash('Register requested for user {}'.format(
 				form.login.data))
 			return redirect(url_for('login'))
+		else:
+			flash('Failed to register')
 	return render_template('users/register.html', title='Register', form=form, user=core.current_user)
 
 
@@ -439,13 +504,15 @@ def registration_requests():
 		for i in range(len(forms)):
 			if forms[i].validate_on_submit():
 				if forms[i].student.data:
-					core.modify(some_id=users[i]['id'], new_type="student")
+					core.modify(id=users[i]['id'], new_type="student")
 				elif forms[i].faculty.data:
-					core.modify(some_id=users[i]['id'], new_type="faculty")
+					core.modify(id=users[i]['id'], new_type="faculty")
 				elif forms[i].librarian.data:
-					core.modify(some_id=users[i]['id'], new_type="librarian")
+					core.modify(id=users[i]['id'], new_type="librarian")
+				elif forms[i].visiting_professor.data:
+					core.modify(id=users[i]['id'], new_type="visiting-professor")
 				elif forms[i].decline.data:
-					core.delete(some_id=users[i]['id'])
+					core.delete(id=users[i]['id'])
 				return redirect(url_for("registration_requests"))
 		return render_template("users/registration_requests.html", user=core.current_user, users=users, forms=forms)
 	else:
@@ -465,6 +532,7 @@ def get_documents(requests):
 		if request['attributes']['action'] == "check-out":
 			documents.append(core.find_by_id(request['attributes']['target_id']))
 		else:
+			# documents.append(core.find_by_id(request['attributes']['target_id']))
 			documents.append(core.find_by_id(core.find_by_id(request['attributes']['target_id'])['attributes']['origin_id']))
 	return documents
 
@@ -479,7 +547,6 @@ def documents_requests():
 		else:
 			users = []
 			documents = []
-		print(users, documents)
 		forms = [ApproveDocumentForm(request.form) for i in range(len(requests))]
 		for i in range(len(forms)):
 			if forms[i].validate_on_submit():
@@ -498,6 +565,8 @@ def documents_requests():
 						if not core.decline_return(requests[i]['id']):
 							flash("failed")
 				return redirect(url_for("documents_requests"))
+		print("requests", requests)
+		print(documents)
 		return render_template("documents/documents_requests.html", user=core.current_user, requests=requests, users=users, documents=documents, forms=forms)
 	else:
 		return redirect(url_for("sorry"))
@@ -509,7 +578,7 @@ def request_document(doc_id):
 		if core.request_check_out(doc_id):
 			return redirect(url_for("document", doc_id=doc_id))
 		else:
-			flash("Failed to check out document with id={}".format(doc_id))
+			flash("Failed to request a document with id={}".format(doc_id))
 			return redirect(url_for("document", doc_id=doc_id))
 	else:
 		return redirect(url_for("sorry"))
@@ -520,14 +589,29 @@ def request_return(copy_id):
 	if can_check_out():
 		if not core.request_return(copy_id):
 			flash("Failed to return document with id={}".format(copy_id))
-		doc_id = core.find_by_id(copy_id)['attributes']['origin_id']
-		return redirect(url_for("document", doc_id=doc_id))
+		# doc_id = core.find_by_id(doc_id)['attributes']['origin_id']
+		return redirect(url_for("document", doc_id=core.find_by_id(copy_id)['attributes']['origin_id']))
 	else:
 		return redirect(url_for("sorry"))
 
 
+@app.route('/outstanding_request/<int:doc_id>')  # TODO
+def outstanding_request(doc_id):
+	if can_modify():
+		#delete queue
+		return redirect(url_for("document",doc_id=doc_id))
+	else:
+		return redirect(url_for("sorry"))
+
+
+@app.route('/run_routines')
+def run_routines():  # TODO
+	if can_modify():
+		core.run_routines()
+
+
 if __name__ == '__main__':
-	core = Core()
+	core = Core(True)
 	app.run(debug=True)
 
 

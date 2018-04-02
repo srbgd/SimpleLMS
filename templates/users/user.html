@@ -13,18 +13,22 @@
     {%if user.type == "librarian"%}
         <h5> <a href=" {{url_for('delete_user', user_id = a_user.id)}}">Delete</a></h5>
     {%endif%}
-    <h5>Holding Documents:</h5>
-    {% if documents %}
-        {% for name in documents %}
-            <p> <a href="{{url_for('document', doc_id=copies[loop.index0].attributes.origin_id)}}"> {{name}}</a>:
-                <span style="margin-left:30px; margin-right:30px">Deadline: {{copies[loop.index0].attributes.deadline}} </span>
-            {% if overdue[loop.index0] > 0 %}
-                Overdue: {{overdue[loop.index0]}}
-            {% else %}
-                {% set over = -overdue[loop.index0]%}
-                {{over}} day(s) left
-            {% endif %}
-            </p>
-        {%endfor%}
+    {% if a_user.type != "librarian" %}
+        <h5>Holding Documents:</h5>
+        {% if documents %}
+            {% for name in documents %}
+                <p> <a href="{{url_for('document', doc_id=copies[loop.index0].attributes.origin_id)}}"> {{name}}</a>:
+                    <span style="margin-left:30px; margin-right:30px">Deadline: {{copies[loop.index0].attributes.deadline}} </span>
+                {% if overdues_and_fines[loop.index0][0] > 0 %}
+                    Overdue: {{overdues_and_fines[loop.index0][0]}}.
+                    fines: {{overdues_and_fines[loop.index0][1]}}
+                {% else %}
+                    {% set over = -overdues_and_fines[loop.index0][0]%}
+                    {{over}} day(s) left
+                {% endif %}
+                </p>
+            {%endfor%}
+        {%endif%}
+        <p>Total fine: {{total_fine}}</p>
     {%endif%}
 {% endblock %}

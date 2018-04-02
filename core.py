@@ -21,7 +21,7 @@ class Core:
 	id = 0
 	"""Current id"""
 
-	def add(self, target, attributes, status_unconfirmed=False):
+	def add(self, target, attributes):
 		"""Add new item to database"""
 		self.db.add({
 			'id': self.id,
@@ -29,14 +29,14 @@ class Core:
 			'attributes': attributes
 		})
 		self.id += 1
-		if status_unconfirmed:
-			return -(self.id - 1)
+		# if status_unconfirmed:
+		# 	return -(self.id - 1)
 		return self.id - 1
 
 	def register(self, target, attributes):  # interchanged and added default
 		"""Add new user to database"""
 		if self.check_user(target, attributes):
-			self.add(target, attributes, status_unconfirmed = target == 'unconfirmed')
+			self.add(target, attributes)
 			return True
 		else:
 			return False
@@ -167,7 +167,7 @@ class Core:
 		"""Delete item from database"""
 		return self.db.delete(id)
 
-	def modify(self, id, attributes, new_type=None):
+	def modify(self, id, attributes={}, new_type=None):
 		"""Modify item in database"""
 		old_attributes = self.find_by_id(id)['attributes']
 		if attributes is not None:
@@ -246,7 +246,7 @@ class Core:
 	def request(self, doc_id, action):
 		if action not in ['check-out', 'return']:
 			return False
-		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'actions': action}
+		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'action': action}
 		if self.find(type, attributes):
 			return False
 		else:
@@ -310,7 +310,9 @@ class Core:
 
 	def get_queue(self, id):
 		priority = ['student', 'faculty', 'visiting-professor']
-		return sorted(self.find('request', {'origin_id': id, 'action': 'check-out'}), key = lambda x: priority.index(x))
+		print('ok')
+		print(self.find('request', {}))
+		return sorted(self.find('request', {'target_id': int(id), 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
 
 	@staticmethod
 	def get_duration(user_type, doc_type):
@@ -321,15 +323,16 @@ class Core:
 			duration = 28
 		elif doc_type == 'best_seller':
 			duration = 14
-		return datetime.timedelta(days = duration)
+		return datetime.timedelta(days=duration)
 
-	def renew(self, id, attributes = None):
+	def renew(self, id, attributes=None):
+		id = int(id)
 		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
 		if copy and not self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
 			if self.current_user['type'] != 'visiting-professor':
 				self.add('renew', {'user_id': self.current_user['id'], 'origin_id': id})
 			timedelta = Core.get_duration(self.current_user['type'], self.find_by_id(id)['type'])
-			self.modify(copy['id'], {'deadline': (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')})
+			self.modify(copy[0]['id'], {'deadline': (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')})
 			return True
 		return False
 
@@ -356,10 +359,8 @@ class Core:
 		if not item:
 			return None
 		else:
-			overdue = self.get_overdue(item)
-			fines = max(0, min(self.db.get_by_id(item['attributes']['origin_id'])['attributes']['price'], overdue * 100))
 			self.modify(item['id'], {'user_id': None, 'deadline': ''})
-			return fines
+			return True
 
 	def check_copies(self, id, attributes):
 		if id == '':

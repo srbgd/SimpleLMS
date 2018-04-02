@@ -100,7 +100,7 @@ class RegistrationForm(FlaskForm):
 class SelectForm(FlaskForm):
     type = SelectField('Status',
                        choices=[('unconfirmed', 'Unconfirmed'), ('faculty', 'Faculty'), ('student', 'Student'),
-                                ('librarian', 'Librarian')])
+                                ('librarian', 'Librarian'), ('visiting-professor',"Visiting Professor")])
     submit = SubmitField('Register', validators=[DataRequired()])
 
 
@@ -108,9 +108,14 @@ class ApproveForm(FlaskForm):
     student = SubmitField(label="Student")
     faculty = SubmitField(label="Faculty")
     librarian = SubmitField(label="Librarian")
+    visiting_professor = SubmitField(label="Visiting Professor")
     decline = SubmitField(label="Decline")
 
 
 class ApproveDocumentForm(FlaskForm):
     approve = SubmitField(label="Approve")
     decline = SubmitField(label="Decline")
+
+
+class RenewForm(FlaskForm):
+    renew = SubmitField(label="Renew")
