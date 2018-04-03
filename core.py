@@ -29,8 +29,6 @@ class Core:
 			'attributes': attributes
 		})
 		self.id += 1
-		# if status_unconfirmed:
-		# 	return -(self.id - 1)
 		return self.id - 1
 
 	def register(self, target, attributes):  # interchanged and added default
@@ -51,7 +49,7 @@ class Core:
 
 	def find(self, type, attributes):
 		"""Find item in database"""
-		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request', 'renew']:
+		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request', 'renew', 'notification', 'outstanding-request']:
 			return self.db.lookup(type, attributes)
 		else:
 			return None
@@ -290,6 +288,21 @@ class Core:
 		else:
 			return self.delete(request_id)
 
+	def delete_queue(self, doc_id):
+		queue = self.get_queue(doc_id)
+		for i in queue:
+			self.delete(i['id'])
+
+	def can_renew(self, id):
+		if self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
+			return False
+		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
+		if copy:
+			copy = copy[0]
+		else:
+			return False
+		return not self.check_overdue(id)
+
 	def request_check_out(self, doc_id):
 		return self.request(doc_id, 'check-out')
 
@@ -310,9 +323,7 @@ class Core:
 
 	def get_queue(self, id):
 		priority = ['student', 'faculty', 'visiting-professor']
-		print('ok')
-		print(self.find('request', {}))
-		return sorted(self.find('request', {'target_id': int(id), 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
+		return sorted(self.find('request', {'target_id': id, 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
 
 	@staticmethod
 	def get_duration(user_type, doc_type):
@@ -336,6 +347,50 @@ class Core:
 			return True
 		return False
 
+	def notify(self, user_id, message):
+		return self.add('notification', {'user_id': user_id, 'date': datetime.datetime.now().strftime('%d/%m/%Y'), 'message': message})
+
+	def outstanding_request(self, book_id):
+		if self.current_user['type'] != 'librarian':
+			return False
+		doc = self.find_by_id(book_id)
+		if not self.check_document_type(doc['type']):
+			return False
+		queue = self.get_queue(book_id)
+		message = 'You cannot check out a book with id {} because of an outstanding request'
+		for request in queue:
+			self.notify(request['attributes']['user_id'], message.format(book_id))
+		self.delete_queue(book_id)
+		message = 'You must immediately return your copy of the book with id {} because of an outstanding request'
+		copies = self.find('copy', {'origin_id': book_id})
+		for copy in copies:
+			if not self.check_available_copy(copy):
+				self.notify(copy['attributes']['user_id'], message.format(book_id))
+				self.modify(copy['id'], {'deadline': datetime.datetime.now().strftime('%d/%m/%Y')})
+		self.add('outstanding-request', {'target_id': book_id})
+		return True
+
+	def delete_outstanding_request(self, book_id):
+		request = self.find('outstanding-request', {'target_id': book_id})
+		if request:
+			request = request[0]
+		else:
+			return False
+		return self.delete(request['id'])
+
+	def placed_outstanding_request(self, book_id):
+		return self.find('outstanding-request', {'target_id': book_id}) != []
+
+	@staticmethod
+	def sort_notifications(notifications):
+		return sorted(notifications, key = lambda x: datetime.datetime.strptime(x['attributes']['date'], '%d/%m/%Y'))
+
+	def get_notifications(self, user_id):
+		return Core.sort_notifications(self.find('notification', {'user_id': user_id}))
+
+	def get_all_notifications(self):
+		return Core.sort_notifications(self.find('notification', {}))
+
 	def check_out(self, doc_id, user_id):
 		"""Checkout document"""
 		if any([i['attributes']['origin_id'] == doc_id and i['attributes']['user_id'] == user_id for i in self.find('copy', {})]):
@@ -343,15 +398,16 @@ class Core:
 		found = [i for i in self.find('copy', {}) if i['attributes']['origin_id'] == doc_id and i['attributes']['user_id'] is None]
 		if not found:
 			return False
-		else:
-			item = found[0]
-			user = self.find_by_id(user_id)
-			doc = self.db.get_by_id(doc_id)
-			item['attributes']['user_id'] = user_id
-			timedelta = Core.get_duration(user['type'], doc['type'])
-			item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
-			self.modify(item['id'], item['attributes'])
-			return True
+		if self.placed_outstanding_request(doc_id):
+			return False
+		item = found[0]
+		user = self.find_by_id(user_id)
+		doc = self.db.get_by_id(doc_id)
+		item['attributes']['user_id'] = user_id
+		timedelta = Core.get_duration(user['type'], doc['type'])
+		item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
+		self.modify(item['id'], item['attributes'])
+		return True
 
 	def give_back(self, copy_id):
 		"""Return document"""
@@ -427,21 +483,6 @@ class Core:
 				return "Command not found"
 			else:
 				return "The current user doesn't have a permission to execute this command"
-
-	def delete_queue(self, doc_id):
-		queue = self.get_queue(doc_id)
-		for i in queue:
-			self.delete(i['id'])
-
-	def can_renew(self, id):
-		if self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
-			return False
-		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
-		if copy:
-			copy = copy[0]
-		else:
-			return False
-		return not self.check_overdue(id)
 
 	def __init__(self, mode):
 		"""Initialize class"""
