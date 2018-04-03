@@ -20,6 +20,7 @@ class Core:
 	"""Database"""
 	id = 0
 	"""Current id"""
+	request_list = {'last_modified': None, 'requests': []}
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
@@ -113,18 +114,18 @@ class Core:
 	def get_all_unconfirmed_users(self):
 		return list(self.db.courteous_lookup({"type": "unconfirmed"}))
 
-	def delete_available_copies(self, book_id):
-		copies = self.find('copy', {'origin_id': book_id})
+	def delete_available_copies(self, doc_id):
+		copies = self.find('copy', {'origin_id': doc_id})
 		for i in copies:
 			if self.check_available_copy(i):
 				self.delete(i['id'])
 
-	def delete_book(self, book_id):
-		copies = self.find('copy', {'origin_id': book_id})
+	def delete_book(self, doc_id):
+		copies = self.find('copy', {'origin_id': doc_id})
 		if all(self.check_available_copy(i) for i in copies):
-			self.delete_available_copies(book_id)
-			self.delete_all_requests(book_id)
-			self.delete(book_id)
+			self.delete_available_copies(doc_id)
+			self.delete_all_requests(doc_id)
+			self.delete(doc_id)
 			return True
 		else:
 			return False
@@ -217,17 +218,20 @@ class Core:
 		"""Change current user"""
 		if login is password is None:
 			self.current_user = None
+			self.normalize_request_list()
 			return True
 		if login == password == '':
 			for i in self.users:
 				for j in i['permissions']:
 					if j not in self.permissions:
 						self.permissions.append(j)
+			self.normalize_request_list()
 			return True
 		user = self.db.lookup('', {'login': login, 'password': password})
 		if user:
 			self.current_user = user[0]
 			self.permissions = self.get_permissions(user[0])
+			self.normalize_request_list()
 			return True
 		else:
 			return False
@@ -350,46 +354,74 @@ class Core:
 	def notify(self, user_id, message):
 		return self.add('notification', {'user_id': user_id, 'date': datetime.datetime.now().strftime('%d/%m/%Y'), 'message': message})
 
-	def outstanding_request(self, book_id):
+	def outstanding_request(self, doc_id):
 		if self.current_user['type'] != 'librarian':
 			return False
-		doc = self.find_by_id(book_id)
+		doc = self.find_by_id(doc_id)
 		if not self.check_document_type(doc['type']):
 			return False
-		queue = self.get_queue(book_id)
-		message = 'You cannot check out a book with id {} because of an outstanding request'
+		queue = self.get_queue(doc_id)
+		message = 'You cannot check out a document with id {} because of an outstanding request'
 		for request in queue:
-			self.notify(request['attributes']['user_id'], message.format(book_id))
-		self.delete_queue(book_id)
-		message = 'You must immediately return your copy of the book with id {} because of an outstanding request'
-		copies = self.find('copy', {'origin_id': book_id})
+			self.notify(request['attributes']['user_id'], message.format(doc_id))
+		self.delete_queue(doc_id)
+		message = 'You must immediately return your copy of the document with id {} because of an outstanding request'
+		copies = self.find('copy', {'origin_id': doc_id})
 		for copy in copies:
 			if not self.check_available_copy(copy):
-				self.notify(copy['attributes']['user_id'], message.format(book_id))
+				self.notify(copy['attributes']['user_id'], message.format(doc_id))
 				self.modify(copy['id'], {'deadline': datetime.datetime.now().strftime('%d/%m/%Y')})
-		self.add('outstanding-request', {'target_id': book_id})
+		self.add('outstanding-request', {'target_id': doc_id})
 		return True
 
-	def delete_outstanding_request(self, book_id):
-		request = self.find('outstanding-request', {'target_id': book_id})
+	def delete_outstanding_request(self, doc_id):
+		request = self.find('outstanding-request', {'target_id': doc_id})
 		if request:
 			request = request[0]
 		else:
 			return False
 		return self.delete(request['id'])
 
-	def placed_outstanding_request(self, book_id):
-		return self.find('outstanding-request', {'target_id': book_id}) != []
+	def placed_outstanding_request(self, doc_id):
+		return self.find('outstanding-request', {'target_id': doc_id}) != []
 
 	@staticmethod
 	def sort_notifications(notifications):
-		return sorted(notifications, key = lambda x: datetime.datetime.strptime(x['attributes']['date'], '%d/%m/%Y'))
+		return list(reversed(sorted(notifications, key = lambda x: datetime.datetime.strptime(x['attributes']['date'], '%d/%m/%Y'))))
 
 	def get_notifications(self, user_id):
 		return Core.sort_notifications(self.find('notification', {'user_id': user_id}))
 
 	def get_all_notifications(self):
 		return Core.sort_notifications(self.find('notification', {}))
+
+	def delete_all_notifications(self):
+		notifications = self.get_all_notifications()
+		for notification in notifications:
+			self.delete(notification['id'])
+
+	def normalize_request_list(self):
+		date = datetime.datetime.now().strftime('%d/%m/%Y')
+		if date != self.request_list['last_modified']:
+			temp_list = []
+			self.request_list['last_modified'] = date
+			for r in self.request_list['requests']:
+				doc_id = r['attributes']['target_id']
+				queue = self.get_queue(doc_id)
+				if queue:
+					new_request = queue[0]
+					temp_list.append(new_request)
+					user_id = new_request['attributes']['user_id']
+					message = 'You can check out an available copy of the document with id {}'
+					self.notify(user_id, message.format(doc_id))
+				message = 'Your request of the document with id {} was deleted because you haven\'t checked it out'
+				self.notify(r['attributes']['user_id'], message.format(doc_id))
+				self.delete(r['id'])
+			self.request_list['requests'] = temp_list
+
+	def append_request_list(self, request):
+		self.normalize_request_list()
+		self.request_list['requests'].append(request)
 
 	def check_out(self, doc_id, user_id):
 		"""Checkout document"""
@@ -416,6 +448,14 @@ class Core:
 			return None
 		else:
 			self.modify(item['id'], {'user_id': None, 'deadline': ''})
+			doc = self.find_by_id(item['attributes']['origin_id'])
+			queue = self.get_queue(doc['id'])
+			if not queue:
+				request = queue[0]
+				user_id = request['attributes']['user_id']
+				message = 'You can check out an available copy of the document with id {}'
+				self.notify(user_id, message.format(doc['id']))
+				self.append_request_list(request)
 			return True
 
 	def check_copies(self, id, attributes):
