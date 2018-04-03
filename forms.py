@@ -115,7 +115,3 @@ class ApproveForm(FlaskForm):
 class ApproveDocumentForm(FlaskForm):
     approve = SubmitField(label="Approve")
     decline = SubmitField(label="Decline")
-
-
-class RenewForm(FlaskForm):
-    renew = SubmitField(label="Renew")

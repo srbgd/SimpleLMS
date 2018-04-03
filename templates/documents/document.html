@@ -20,7 +20,7 @@
                 <p><a href="{{url_for('delete_copy', origin_id=document.id)}}">Delete 1 copy</a></p>
                 <p><a href="{{url_for('delete_copies', origin_id=document.id)}}">Delete all copies</a></p>
             {% endif %}
-             <p><a href="{{url_for('outstanding_request', doc_id=document.id)}}"> Place and outstanding request for a document</a></p>
+             <p><a href="{{url_for('outstanding_request', doc_id=document.id)}}"> Place an outstanding request for a document</a></p>
 
             <h5> Users: </h5>
             {% for copy in held_copies %}

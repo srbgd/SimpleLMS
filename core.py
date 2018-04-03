@@ -428,6 +428,21 @@ class Core:
 			else:
 				return "The current user doesn't have a permission to execute this command"
 
+	def delete_queue(self, doc_id):
+		queue = self.get_queue(doc_id)
+		for i in queue:
+			self.delete(i['id'])
+
+	def can_renew(self, id):
+		if self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
+			return False
+		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
+		if copy:
+			copy = copy[0]
+		else:
+			return False
+		return not self.check_overdue(id)
+
 	def __init__(self, mode):
 		"""Initialize class"""
 		self.init_db(mode)
