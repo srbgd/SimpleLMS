@@ -15,17 +15,24 @@
 
     {% if document.type != "reference_book" %}
         <p> Available copies: {{available_copies}}</p>
-        {% if available_copies > 0 and user.type == "librarian" %}
-            <p><a href="{{url_for('delete_copy', origin_id=document.id)}}">Delete 1 copy</a></p>
-            <p><a href="{{url_for('delete_copies', origin_id=document.id)}}">Delete all copies</a></p>
-        {% endif %}
         {% if user.type == "librarian" %}
-            <h5> Users</h5>
+             {% if available_copies > 0%}
+                <p><a href="{{url_for('delete_copy', origin_id=document.id)}}">Delete 1 copy</a></p>
+                <p><a href="{{url_for('delete_copies', origin_id=document.id)}}">Delete all copies</a></p>
+            {% endif %}
+             <p><a href="{{url_for('outstanding_request', doc_id=document.id)}}"> Place an outstanding request for a document</a></p>
+
+            <h5> Users: </h5>
             {% for copy in held_copies %}
                 <p> <a href="{{url_for('user', user_id=copy.attributes.user_id)}}"> {{names[loop.index0]}} {{copy.attributes.user_id}}</a>.
                 deadline: {{copy.attributes.deadline}}
                 <!--overdue: {{overdue_days[loop.index0]}}-->
                 <a href="{{url_for('return_document', copy_id = copy['id'])}}"> Return </a></p>
+            {%endfor%}
+            <h5> Requests: </h5>
+            {% for request in priority_queue%}
+                <p> <a href="{{url_for('user', user_id=request.attributes.user_id)}}"> {{names_and_types[loop.index0][0]}} {{request.attributes.user_id}}</a>.
+                Type: {{names_and_types[loop.index0][1]}}
             {%endfor%}
         {% endif %}
         {% if user and user.type != "librarian"%}
@@ -33,6 +40,11 @@
                 {% if requested_to_return %}
                     You requested to return
                 {% else %}
+                    {% if can_renew == True %}
+                        <h5> <a href="{{url_for('renew', doc_id = document.id)}}">Renew</a></h5>
+                    {% else %}
+                        You renewed.
+                    {% endif %}
                     <h5> <a href="{{url_for('request_return', copy_id = copy_id)}}">Request to Return</a></h5>
                 {% endif %}
             {% elif requested %}

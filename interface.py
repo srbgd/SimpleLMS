@@ -5,7 +5,6 @@ from config import Config
 from forms import LoginForm, RegistrationForm, EditProfileForm, ChangePasswordForm, SearchForm, SelectForm, ApproveForm, ApproveDocumentForm
 from forms import AddBookForm, AddReferenceBookForm, AddJournalForm, AddAVForm, AddCopies
 
-import sys
 import json
 doc_attributes = json.loads(open('documents.json').read())
 
@@ -45,6 +44,7 @@ def users():
 
 @app.route("/overdue_users")
 def overdue_users():
+	"""For librarian to get users with overdue"""
 	return render_template("users/users.html", users=core.get_all_users_with_overdue(), user=core.current_user)
 
 
@@ -106,23 +106,56 @@ def document(doc_id):
 			copy_id = core.find("copy", {"user_id": core.current_user['id'], "origin_id": doc_id})[0]['id']
 		else:
 			copy_id = 0
+		priority_queue = core.get_queue(doc_id)
+		names_and_types = get_names_and_types_from_queue(priority_queue)
 		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=core.current_user,
-							   available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
-							   names=names, overdue_days=overdue_days(held_copies), requested=user_requested(doc_id),
-								requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id, overdue=get_overdue(copy_id))
+								available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
+								names=names, overdue_days=overdue_days(held_copies), requested=user_requested(doc_id),
+								requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
+								overdue=get_overdue(copy_id), can_renew=core.can_renew(doc_id), priority_queue=priority_queue,
+								names_and_types=names_and_types)
 
 	else:
 		return redirect(url_for('sorry'))
 
 
-def user_requested_to_return(copy_id):
+def get_names_and_types_from_queue(priority_queue):
+	"""From queue of requests get names and types of users"""
+	names_and_types = []
+	for request in priority_queue:
+		user = core.find_by_id(request['attributes']['user_id'])
+		names_and_types.append((user['attributes']['name'], user['type']))
+	return names_and_types
+
+
+def can_renew(doc_id):
+	"""Return True if current user can renew this document, False otherwise"""
+	if core.find(type="renew", attributes={"origin_id": doc_id,"user_id": core.current_user['id']}):
+		return False
+	return True
+
+
+@app.route("/renew/<int:doc_id>")
+def renew(doc_id):
+	"""Renew a document by current user"""
+	if can_modify(core.current_user['id']):
+		if not core.renew(doc_id):
+			flash("Failed to renew book with id= {}".format(doc_id))
+		return redirect(url_for("document", doc_id=doc_id))
+	else:
+		return redirect(url_for("sorry"))
+
+
+def user_requested_to_return(doc_id):
+	"""Check if user requested to return a document"""
 	if can_check_out():
-		return (core.find("request", {"action": "return", "target_id": copy_id, "user_id": core.current_user['id']})) != []
+		return (core.find("request", {"action": "return", "target_id": doc_id, "user_id": core.current_user['id']})) != []
 	else:
 		return False
 
 
 def user_requested(doc_id):
+	"""Check if a user requested to check out a document"""
 	if can_check_out():
 		return (core.find("request", {"action": "check-out", "target_id": doc_id, "user_id": core.current_user['id']})) != []
 	else:
@@ -131,6 +164,7 @@ def user_requested(doc_id):
 
 @app.route('/delete_copy/<int:origin_id>')
 def delete_copy(origin_id):
+	"""Delete 1 copy of a document"""
 	if can_modify():
 		core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})
 		return redirect(url_for("document", doc_id=origin_id))
@@ -140,21 +174,45 @@ def delete_copy(origin_id):
 
 @app.route('/delete_copies/<int:origin_id>')
 def delete_copies(origin_id):
+	"""Delete all available copies of a document"""
 	if can_modify():
 		core.delete_available_copies(origin_id)
+		return redirect(url_for("document", doc_id=origin_id))
 	else:
 		return redirect(url_for("sorry"))
 
 
 def overdue_days(copies):
+	"""Get overdue days from copies itemes in database"""
 	overdue_days = []
 	for copy in copies:
 		overdue_days.append(get_overdue(copy))
+	return overdue_days
 
 
 def get_overdue(copy):
+	"""Get an overdue of a copy"""
 	try:
 		return core.get_overdue(copy)
+	except Exception:
+		return 0
+
+
+def overdue_days_and_fines(copies):
+	"""Get overdue days and fines (pairs) of copies"""
+	overdues_and_fines = []
+	sum = 0
+	for copy in copies:
+		pair = overdue_and_fine(copy)
+		overdues_and_fines.append(pair)
+		sum += pair[1]
+	return overdues_and_fines, sum
+
+
+def overdue_and_fine(copy):
+	"""Get overdue days and fines (pair) of copy"""
+	try:
+		return core.get_overdue(copy), core.get_fine(copy)
 	except Exception:
 		return 0
 
@@ -203,8 +261,12 @@ def edit_document(doc_id):
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
-			add_n_copies(doc_id, add_copies.number.data)
+			try:
+				core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
+			except Exception:
+				core.modify(doc_id, new_attributes)
+			if add_copies:
+				add_n_copies(doc_id, add_copies.number.data)
 			return redirect(url_for("document", doc_id=doc_id))
 		elif request.method == 'GET':
 			old_attributes = core.find_by_id(doc_id)['attributes']
@@ -240,6 +302,7 @@ def add_documents():
 
 @app.route('/checked_out')
 def checked_out():
+	"""Check if a current user can check out"""
 	if can_modify():
 		checked_out = core.get_all_checked_out_documents()
 		return render_template("documents/checked_out.html", documents = checked_out, user = core.current_user)
@@ -268,6 +331,7 @@ def add_document(action_id):
 			form = AddReferenceBookForm()
 			attributes = doc_attributes[1]["attributes"]
 			target = 'reference_book'
+			add_copies = None
 		elif action_id == 3:
 			form = AddJournalForm()
 			attributes = doc_attributes[3]["attributes"]
@@ -281,8 +345,11 @@ def add_document(action_id):
 			new_attributes = {}
 			for attribute in attributes:
 				new_attributes[attribute] = form[attribute].data
-			n = add_copies.number.data if add_copies.number.data is not None else 0
-			core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
+			if add_copies:
+				n = add_copies.number.data if add_copies.number.data is not None else 0
+				core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
+			else:
+				core.add(target=target, attributes=new_attributes)
 			return redirect(url_for('add_documents'))
 		return render_template("documents/add_document.html", title='Add document', form=form, attributes=attributes, user=core.current_user, add_copies=add_copies)
 	else:
@@ -291,9 +358,9 @@ def add_document(action_id):
 
 @app.route('/delete_user/<int:user_id>')
 def delete_user(user_id):
+	"""Delete a user with given id"""
 	if can_modify(user_id):
 		copies = get_copies(user_id)
-		print(copies)
 		if len(copies) > 0:
 			flash("Failed to delete user with id {}. He has documents to return".format(user_id))
 			return redirect(url_for("user", user_id=user_id))
@@ -308,7 +375,7 @@ def login():
 	"""rendering login"""
 	form = LoginForm()
 	if form.validate_on_submit():
-		if core.login(form.login.data, form.password.data):  # now I can use core.current_user
+		if core.login(form.login.data, form.password.data):
 			flash('Login requested for user {}, remember_me={}'.format(
 				form.login.data, form.remember_me.data))
 			return redirect(url_for('documents'))
@@ -321,8 +388,9 @@ def user(user_id):
 	if can_modify(user_id):
 		copies = get_copies(user_id)
 		documents_names = user_documents_names(copies)
-		overdue = [get_overdue(copy) for copy in copies]
-		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies, documents=documents_names, overdue=overdue)
+		(overdues_and_fines, total_fine) = overdue_days_and_fines(copies)
+		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies,
+												documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -369,7 +437,7 @@ def edit_profile(user_id):
 				new_type = approve_form.type.data
 			attributes = {"login":form.login.data, "name": form.name.data,
 													"address": form.address.data, "phone-number": form.phone_number.data, "card-number": form.card_number.data}
-			core.modify(some_id=user_id, attributes=attributes, new_type=new_type)
+			core.modify(id=user_id, attributes=attributes, new_type=new_type)
 			flash('Your changes have been saved.')
 			return redirect(url_for('user', user_id=user_id))
 		elif request.method == 'GET':
@@ -424,28 +492,33 @@ def register():
 													"address": form.address.name, "phone-number": form.phone_number.data,
 													"card-number": form.card_number.data}
 		# if core.register(form.type.data, new_user):
-		if core.register(new_user):
+		if core.register("unconfirmed", new_user):
 			flash('Register requested for user {}'.format(
 				form.login.data))
 			return redirect(url_for('login'))
+		else:
+			flash('Failed to register')
 	return render_template('users/register.html', title='Register', form=form, user=core.current_user)
 
 
 @app.route('/registration_requests', methods=["GET","POST"])
 def registration_requests():
+	"""For librarian to assign a user's status"""
 	if can_modify():
 		users = core.get_all_unconfirmed_users()
 		forms = [ApproveForm(request.form) for i in range(len(users))]
 		for i in range(len(forms)):
 			if forms[i].validate_on_submit():
 				if forms[i].student.data:
-					core.modify(some_id=users[i]['id'], new_type="student")
+					core.modify(id=users[i]['id'], new_type="student")
 				elif forms[i].faculty.data:
-					core.modify(some_id=users[i]['id'], new_type="faculty")
+					core.modify(id=users[i]['id'], new_type="faculty")
 				elif forms[i].librarian.data:
-					core.modify(some_id=users[i]['id'], new_type="librarian")
+					core.modify(id=users[i]['id'], new_type="librarian")
+				elif forms[i].visiting_professor.data:
+					core.modify(id=users[i]['id'], new_type="visiting-professor")
 				elif forms[i].decline.data:
-					core.delete(some_id=users[i]['id'])
+					core.delete(id=users[i]['id'])
 				return redirect(url_for("registration_requests"))
 		return render_template("users/registration_requests.html", user=core.current_user, users=users, forms=forms)
 	else:
@@ -453,6 +526,7 @@ def registration_requests():
 
 
 def get_users(requests):
+	"""Get users from request items in database"""
 	users = []
 	for request in requests:
 		users.append(core.find_by_id(request['attributes']['user_id']))
@@ -460,6 +534,7 @@ def get_users(requests):
 
 
 def get_documents(requests):
+	"""Get documents from request items in database"""
 	documents = []
 	for request in requests:
 		if request['attributes']['action'] == "check-out":
@@ -471,6 +546,7 @@ def get_documents(requests):
 
 @app.route('/documents_requests/', methods=['GET', 'POST'])
 def documents_requests():
+	"""For librarian to work with documents' requests"""
 	if can_modify():
 		requests = core.courteous_find({"type": "request"})
 		if requests:
@@ -479,7 +555,6 @@ def documents_requests():
 		else:
 			users = []
 			documents = []
-		print(users, documents)
 		forms = [ApproveDocumentForm(request.form) for i in range(len(requests))]
 		for i in range(len(forms)):
 			if forms[i].validate_on_submit():
@@ -505,11 +580,12 @@ def documents_requests():
 
 @app.route('/request_document/<int:doc_id>', methods=["GET", "POST"])
 def request_document(doc_id):
+	"""For user to request a document to check out"""
 	if can_check_out():
 		if core.request_check_out(doc_id):
 			return redirect(url_for("document", doc_id=doc_id))
 		else:
-			flash("Failed to check out document with id={}".format(doc_id))
+			flash("Failed to request a document with id={}".format(doc_id))
 			return redirect(url_for("document", doc_id=doc_id))
 	else:
 		return redirect(url_for("sorry"))
@@ -517,17 +593,32 @@ def request_document(doc_id):
 
 @app.route('/request_return/<int:copy_id>', methods=["POST","GET"])
 def request_return(copy_id):
+	"""For user to request a document to return"""
 	if can_check_out():
 		if not core.request_return(copy_id):
 			flash("Failed to return document with id={}".format(copy_id))
-		doc_id = core.find_by_id(copy_id)['attributes']['origin_id']
-		return redirect(url_for("document", doc_id=doc_id))
+		return redirect(url_for("document", doc_id=core.find_by_id(copy_id)['attributes']['origin_id']))
 	else:
 		return redirect(url_for("sorry"))
 
 
+@app.route('/outstanding_request/<int:doc_id>')
+def outstanding_request(doc_id):
+	if can_modify():
+		core.delete_queue(doc_id)
+		return redirect(url_for("document",doc_id=doc_id))
+	else:
+		return redirect(url_for("sorry"))
+
+
+@app.route('/run_routines')
+def run_routines():
+	if can_modify():
+		core.run_routines()
+
+
 if __name__ == '__main__':
-	core = Core()
+	core = Core(True)
 	app.run(debug=True)
 
 

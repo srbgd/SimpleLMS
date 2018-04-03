@@ -10,7 +10,7 @@
             <span class="lists">Type</span>
         </li>
     {% for doc in documents %}
-        <li class="nav-item" style="font-size:1.15em; margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" ><a class="lists" href="{{ url_for('document', doc_id=doc.id)}}"> {{doc.attributes.title}}.</a>
+        <li class="nav-item" style="font-size:1.15em; margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" ><a class="lists" href="{{ url_for('document', doc_id=doc.id)}}"> {{doc.attributes.title}}</a>
             <span class="lists"> {{doc.attributes.authors}}</span>
             <span class="lists"> {{doc.type}}</span> </p>
 

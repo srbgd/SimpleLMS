@@ -47,6 +47,9 @@ class DataBase:
 		"""Delete item from database"""
 		self.shelf.delete_many({"id": some_id})
 
+	def delete_one(self, items):
+		self.shelf.delete_one(items)
+
 	def modify_and_change_type(self, some_id, attributes, type):
 		self.shelf.update_one({"id":some_id}, {
 			"$set": {"attributes":attributes, "type":type}
@@ -66,5 +69,6 @@ class DataBase:
 
 	def get_by_id(self, some_id):
 		"""Get a document with given id"""
-		found = (self.shelf.find({"id": some_id}))
-		return found[0] if found else []
+		found = list(self.shelf.find({"id": some_id}))
+		# print(found)
+		return found[0] if found else {}
