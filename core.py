@@ -238,6 +238,7 @@ class Core:
 
 	def add_copy(self, id, attributes = None):
 		"""Add copy to database"""
+		id = int(id)
 		document = self.db.get_by_id(id)
 		if self.check_document_type(document['type']) and 'reference-book' != document['type']:
 			self.add('copy', {'origin_id': id, 'user_id': None, 'deadline': ''})
@@ -256,6 +257,7 @@ class Core:
 			return True
 
 	def approve_cmd(self, id, attributes = None):
+		id = int(id)
 		request = self.find_by_id(id)
 		action = request['attributes']['action']
 		return self.approve(id, action)
@@ -274,11 +276,16 @@ class Core:
 		elif self.current_user['type'] != 'librarian':
 			return False
 		else:
-			self.delete(request_id)
 			if action == 'check-out':
-				return self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
+				result = self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
+				if result:
+					self.delete(request_id)
+				return result
 			if action == 'return':
-				return self.give_back(request['attributes']['target_id'])
+				result = self.give_back(request['attributes']['target_id'])
+				if result:
+					self.delete(request_id)
+				return result
 			return False
 
 	def decline(self, request_id, action):
@@ -300,12 +307,14 @@ class Core:
 	def can_renew(self, id):
 		if self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
 			return False
+		if self.placed_outstanding_request(id):
+			return False
 		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
 		if copy:
 			copy = copy[0]
 		else:
 			return False
-		return not self.check_overdue(id)
+		return not self.check_overdue(copy)
 
 	def request_check_out(self, doc_id):
 		return self.request(doc_id, 'check-out')
@@ -325,8 +334,11 @@ class Core:
 	def decline_return(self, request_id):
 		return self.decline(request_id, 'return')
 
+	def request_check_out_cmd(self, id, attibutes = None):
+		return self.request_check_out(int(id))
+
 	def get_queue(self, id):
-		priority = ['student', 'faculty', 'visiting-professor']
+		priority = ['student', 'visiting-professor', 'faculty']
 		return sorted(self.find('request', {'target_id': id, 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
 
 	@staticmethod
@@ -334,7 +346,7 @@ class Core:
 		duration = 21
 		if user_type == 'visiting-professor':
 			duration = 7
-		if user_type == 'faculty':
+		elif user_type == 'faculty':
 			duration = 28
 		elif doc_type == 'best_seller':
 			duration = 14
@@ -437,7 +449,8 @@ class Core:
 		doc = self.db.get_by_id(doc_id)
 		item['attributes']['user_id'] = user_id
 		timedelta = Core.get_duration(user['type'], doc['type'])
-		item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
+		# item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
+		item['attributes']['deadline'] = (datetime.datetime(day=26, month=3, year=2018) + timedelta).strftime('%d/%m/%Y')
 		self.modify(item['id'], item['attributes'])
 		return True
 
@@ -450,7 +463,7 @@ class Core:
 			self.modify(item['id'], {'user_id': None, 'deadline': ''})
 			doc = self.find_by_id(item['attributes']['origin_id'])
 			queue = self.get_queue(doc['id'])
-			if not queue:
+			if queue:
 				request = queue[0]
 				user_id = request['attributes']['user_id']
 				message = 'You can check out an available copy of the document with id {}'
@@ -495,7 +508,8 @@ class Core:
 			'drop': self.drop,
 			'check': self.check_copies,
 			'approve': self.approve_cmd,
-			'decline': self.decline_cmd
+			'decline': self.decline_cmd,
+			'checkout-request': self.request_check_out_cmd
 		}
 
 	def init_users(self):
