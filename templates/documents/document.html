@@ -20,7 +20,11 @@
                 <p><a href="{{url_for('delete_copy', origin_id=document.id)}}">Delete 1 copy</a></p>
                 <p><a href="{{url_for('delete_copies', origin_id=document.id)}}">Delete all copies</a></p>
             {% endif %}
-             <p><a href="{{url_for('outstanding_request', doc_id=document.id)}}"> Place an outstanding request for a document</a></p>
+            {% if is_outstanding_request == False %}
+                <p><a href="{{url_for('outstanding_request_on', doc_id=document.id)}}"> Place an outstanding request for a document</a></p>
+            {% else %}
+                <p><a href="{{url_for('outstanding_request_off', doc_id=document.id)}}"> Take off outstanding request</a></p>
+            {% endif %}
 
             <h5> Users: </h5>
             {% for copy in held_copies %}
@@ -43,7 +47,7 @@
                     {% if can_renew == True %}
                         <h5> <a href="{{url_for('renew', doc_id = document.id)}}">Renew</a></h5>
                     {% else %}
-                        You renewed.
+                        You cannot renew this document (no longer)
                     {% endif %}
                     <h5> <a href="{{url_for('request_return', copy_id = copy_id)}}">Request to Return</a></h5>
                 {% endif %}

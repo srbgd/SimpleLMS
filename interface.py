@@ -17,10 +17,13 @@ core = None
 @app.route('/documents', methods=['POST','GET'])
 def documents():
 	"""rendering documents (main page)"""
-	search_form = SearchForm()
-	if search_form.validate_on_submit():
-		return search_results(search_form)
-	return render_template('documents/documents.html', documents=core.find_all_documents(), user=core.current_user)  # search_form=search_form
+	if can_check_out() or can_modify():
+		search_form = SearchForm()
+		if search_form.validate_on_submit():
+			return search_results(search_form)
+		return render_template('documents/documents.html', documents=core.find_all_documents(), user=core.current_user)  # search_form=search_form
+	else:
+		return redirect(url_for("sorry"))
 
 
 @app.route('/check_out/<int:doc_id>')
@@ -92,7 +95,7 @@ def document(doc_id):
 	"""rendering document page with id=doc_id"""
 	document = core.find_by_id(doc_id)
 	if document["type"] != "student" and document["type"] != "faculty" and document["type"] != "librarian":
-		copies = core.courteous_find({"attributes.origin_id":doc_id})
+		copies = core.find("copy",{"origin_id":doc_id})
 		available_copies = 0
 
 		held_copies = []
@@ -108,13 +111,13 @@ def document(doc_id):
 			copy_id = 0
 		priority_queue = core.get_queue(doc_id)
 		names_and_types = get_names_and_types_from_queue(priority_queue)
+		print(core.placed_outstanding_request(doc_id))
 		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=core.current_user,
 								available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
 								names=names, overdue_days=overdue_days(held_copies), requested=user_requested(doc_id),
 								requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
 								overdue=get_overdue(copy_id), can_renew=core.can_renew(doc_id), priority_queue=priority_queue,
-								names_and_types=names_and_types)
-
+								names_and_types=names_and_types, is_outstanding_request=core.placed_outstanding_request(doc_id))
 	else:
 		return redirect(url_for('sorry'))
 
@@ -128,11 +131,11 @@ def get_names_and_types_from_queue(priority_queue):
 	return names_and_types
 
 
-def can_renew(doc_id):
-	"""Return True if current user can renew this document, False otherwise"""
-	if core.find(type="renew", attributes={"origin_id": doc_id,"user_id": core.current_user['id']}):
-		return False
-	return True
+# def can_renew(doc_id):
+# 	"""Return True if current user can renew this document, False otherwise"""
+# 	if core.find(type="renew", attributes={"origin_id": doc_id,"user_id": core.current_user['id']}):
+# 		return False
+# 	return True
 
 
 @app.route("/renew/<int:doc_id>")
@@ -305,9 +308,14 @@ def checked_out():
 	"""Check if a current user can check out"""
 	if can_modify():
 		checked_out = core.get_all_checked_out_documents()
-		return render_template("documents/checked_out.html", documents = checked_out, user = core.current_user)
+		fines = [get_fines(document) for document in checked_out]
+		return render_template("documents/checked_out.html", documents=checked_out, user=core.current_user, fines=fines)
 	else:
 		return redirect(url_for("sorry"))
+
+
+def get_fines(document):
+	return sum([core.get_fine(copy) for copy in core.find("copy",{"origin_id": document['id']})] + [0])
 
 
 @app.route('/add_document/<int:action_id>', methods=["GET", "POST"])
@@ -389,8 +397,10 @@ def user(user_id):
 		copies = get_copies(user_id)
 		documents_names = user_documents_names(copies)
 		(overdues_and_fines, total_fine) = overdue_days_and_fines(copies)
+		notifications = core.get_notifications(user_id)
+		print(notifications)
 		return render_template("users/user.html", user=core.current_user, a_user=core.find_by_id(user_id), copies=copies,
-												documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine)
+												documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine, notifications=notifications)
 	else:
 		return redirect(url_for('sorry'))
 
@@ -602,10 +612,19 @@ def request_return(copy_id):
 		return redirect(url_for("sorry"))
 
 
-@app.route('/outstanding_request/<int:doc_id>')
-def outstanding_request(doc_id):
+@app.route('/outstanding_request_on/<int:doc_id>')
+def outstanding_request_on(doc_id):
 	if can_modify():
-		core.delete_queue(doc_id)
+		core.outstanding_request(doc_id)
+		return redirect(url_for("document", doc_id=doc_id))
+	else:
+		return redirect(url_for("sorry"))
+
+
+@app.route('/outstanding_request_off/<int:doc_id>')
+def outstanding_request_off(doc_id):
+	if can_modify():
+		core.delete_outstanding_request(doc_id)
 		return redirect(url_for("document",doc_id=doc_id))
 	else:
 		return redirect(url_for("sorry"))
@@ -615,6 +634,15 @@ def outstanding_request(doc_id):
 def run_routines():
 	if can_modify():
 		core.run_routines()
+
+
+@app.route('/all_notifications')
+def all_notifications():
+	if can_modify():
+		notifications = core.get_all_notifications()
+		return render_template("users/all_notifications.html", notifications=notifications, user=core.current_user)
+	else:
+		return redirect(url_for("sorry"))
 
 
 if __name__ == '__main__':

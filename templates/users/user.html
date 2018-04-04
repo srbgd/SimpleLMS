@@ -30,5 +30,10 @@
             {%endfor%}
         {%endif%}
         <p>Total fine: {{total_fine}}</p>
+        <br>
+        <h5>Notifications:</h5>
+        {% for notification in notifications%}
+            <p>{{notification.attributes.message}}</span></p>
+        {% endfor %}
     {%endif%}
 {% endblock %}
