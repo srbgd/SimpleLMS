@@ -19,11 +19,11 @@ class Interface:
 		self.test_mode = mode
 
 	def input(self, s):
-		return input('' if self.test_mode else s)
+		return input('' if self.test_mode else s).strip()
 
 	def login(self):
 		"""Change current user"""
-		alias = self.input('Login: ')
+		alias = self.input('Login: ').strip()
 		password = self.input('Password: ')
 		if self.core.login(alias, password):
 			print('Success' + ('' if self.test_mode else '\n'))
@@ -52,5 +52,4 @@ class Interface:
 				self.login()
 			else:
 				command, target, attributes = Interface.parse(cmd)
-				print(target, attributes)
 				print(self.core.execute(Command(command, attributes, target)))

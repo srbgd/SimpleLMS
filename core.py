@@ -263,6 +263,7 @@ class Core:
 		return self.approve(id, action)
 
 	def decline_cmd(self, id, attributes = None):
+		id = int(id)
 		request = self.find_by_id(id)
 		action = request['attributes']['action']
 		return self.decline(id, action)
@@ -373,7 +374,7 @@ class Core:
 		if not self.check_document_type(doc['type']):
 			return False
 		queue = self.get_queue(doc_id)
-		message = 'You cannot check out a document with id {} because of an outstanding request'
+		message = 'have been removed from the waiting list of the document with id {} because of an outstanding request'
 		for request in queue:
 			self.notify(request['attributes']['user_id'], message.format(doc_id))
 		self.delete_queue(doc_id)
@@ -449,8 +450,7 @@ class Core:
 		doc = self.db.get_by_id(doc_id)
 		item['attributes']['user_id'] = user_id
 		timedelta = Core.get_duration(user['type'], doc['type'])
-		# item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
-		item['attributes']['deadline'] = (datetime.datetime(day=26, month=3, year=2018) + timedelta).strftime('%d/%m/%Y')
+		item['attributes']['deadline'] = (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')
 		self.modify(item['id'], item['attributes'])
 		return True
 

@@ -6,17 +6,17 @@
   },
   {
     "type": "faculty",
-    "permissions": ["find", "checkout", "return"],
+    "permissions": ["find", "checkout", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
     "type": "student",
-    "permissions": ["find", "checkout", "return"],
+    "permissions": ["find", "checkout", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
     "type": "visiting-professor",
-    "permissions": ["find", "checkout", "return"],
+    "permissions": ["find", "checkout", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
 
