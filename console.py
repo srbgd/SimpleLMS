@@ -19,6 +19,7 @@ class Interface:
 		self.test_mode = mode
 
 	def input(self, s):
+		"""Print invitation for input"""
 		return input('' if self.test_mode else s).strip()
 
 	def login(self):

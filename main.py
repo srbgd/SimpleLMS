@@ -1,6 +1,13 @@
 from core import Core
 import sys
 
+##
+# \authors Rishat Rizvanov, Sergey Bogdanik
+# \version 1.0
+# \mainpage SimpleLMS
+# \warning Python 3.5.2 (default, Nov 23 2017, 16:37:01)
+# \date 2018, April
+
 
 def main(interface_mode, database_mode):
 	"""Main function"""
