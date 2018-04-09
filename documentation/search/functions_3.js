@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['decline',['decline',['../classcore_1_1Core.html#afb753bbb0147058418314b3b3076d09b',1,'core::Core']]],
+  ['decline_5fcheck_5fout',['decline_check_out',['../classcore_1_1Core.html#a2f32daa7af4e31708d0fd9ce992495b9',1,'core::Core']]],
+  ['decline_5fcmd',['decline_cmd',['../classcore_1_1Core.html#a723bc9d5f149fd8e4d1cd8e6b8728bde',1,'core::Core']]],
+  ['decline_5freturn',['decline_return',['../classcore_1_1Core.html#a3d4d341bb5e76871f80ca4b278d60d7c',1,'core::Core']]],
+  ['delete',['delete',['../classcore_1_1Core.html#ac261c36f9904650a5cec72ed65b2da7e',1,'core.Core.delete()'],['../classdatabase_1_1DataBase.html#a6276c7468b17e6c5ab13231714093084',1,'database.DataBase.delete()'],['../classmongo__database_1_1DataBase.html#a73dccdd1310a7b3d35bc0e8de4b9a70b',1,'mongo_database.DataBase.delete()']]],
+  ['delete_5fall_5fnotifications',['delete_all_notifications',['../classcore_1_1Core.html#ada57cd4becc167b22804f8605405b188',1,'core::Core']]],
+  ['delete_5fall_5frequests',['delete_all_requests',['../classcore_1_1Core.html#a2d0fa60c519182f3c16f0b78dc3f4429',1,'core::Core']]],
+  ['delete_5favailable_5fcopies',['delete_available_copies',['../classcore_1_1Core.html#af70d4e0ee65243304213a5542e6f2d28',1,'core::Core']]],
+  ['delete_5fbook',['delete_book',['../classcore_1_1Core.html#afcd6541aa86b2b4fc5827cb174d003ac',1,'core::Core']]],
+  ['delete_5fcopies',['delete_copies',['../namespaceinterface.html#ae4b3d60d0d620c802c200616dcbe6f79',1,'interface']]],
+  ['delete_5fcopy',['delete_copy',['../namespaceinterface.html#a166ece5a237f7be4cc1a06a9cc07762a',1,'interface']]],
+  ['delete_5fdocument',['delete_document',['../namespaceinterface.html#a6cbad51c1132d6e99957cb79159d5c6c',1,'interface']]],
+  ['delete_5fone',['delete_one',['../classmongo__database_1_1DataBase.html#a3f14d1f773b3d37f58e209302a535c1c',1,'mongo_database::DataBase']]],
+  ['delete_5foutstanding_5frequest',['delete_outstanding_request',['../classcore_1_1Core.html#a765abfae460151a99db0bdb091728ab0',1,'core::Core']]],
+  ['delete_5fqueue',['delete_queue',['../classcore_1_1Core.html#a3516de350d99c007f854f2302fa879d7',1,'core::Core']]],
+  ['delete_5fuser',['delete_user',['../namespaceinterface.html#a2d71eeaa8f9e3f9f2669ba00da4ef05c',1,'interface']]],
+  ['document',['document',['../namespaceinterface.html#afe969742b974a436d3baef34222b46c5',1,'interface']]],
+  ['documents',['documents',['../namespaceinterface.html#ae4b4375fdfca32b51f75e776d146545e',1,'interface']]],
+  ['documents_5frequests',['documents_requests',['../namespaceinterface.html#aa5fc69918d2d4ac67eceee71d3eed8e1',1,'interface']]],
+  ['drop',['drop',['../classcore_1_1Core.html#a6db850dc3c86d649a4f4cb5aa58436c3',1,'core.Core.drop()'],['../classdatabase_1_1DataBase.html#a9a61904d77420f3f9ee4b808fe92229d',1,'database.DataBase.drop()'],['../classmongo__database_1_1DataBase.html#a57279c0eeb7674fa55da638402260544',1,'mongo_database.DataBase.drop()']]]
+];

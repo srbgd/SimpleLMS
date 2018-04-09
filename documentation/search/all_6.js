@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['get_5fall_5fchecked_5fout_5fdocuments',['get_all_checked_out_documents',['../classcore_1_1Core.html#a05624c060344357398bd2292500d397a',1,'core::Core']]],
+  ['get_5fall_5fnotifications',['get_all_notifications',['../classcore_1_1Core.html#a34f00032b1f74cf52f1c12a87b6cd3fd',1,'core::Core']]],
+  ['get_5fall_5funconfirmed_5fusers',['get_all_unconfirmed_users',['../classcore_1_1Core.html#af96fec971877f6cac11911505779a20b',1,'core::Core']]],
+  ['get_5fall_5fusers_5fwith_5foverdue',['get_all_users_with_overdue',['../classcore_1_1Core.html#af23acf5370a330c5faba06b9460153a1',1,'core::Core']]],
+  ['get_5fby_5fid',['get_by_id',['../classdatabase_1_1DataBase.html#adea4bee368f1404902b38e6aee983a17',1,'database.DataBase.get_by_id()'],['../classmongo__database_1_1DataBase.html#aad4b7e3399d0256baaafca9ef44ee3e2',1,'mongo_database.DataBase.get_by_id()']]],
+  ['get_5fcopies',['get_copies',['../namespaceinterface.html#a22186cb36f0251434aade903183f6eeb',1,'interface']]],
+  ['get_5fdocuments',['get_documents',['../namespaceinterface.html#a5027862f3bebef15924a0b68a124a1d2',1,'interface']]],
+  ['get_5fduration',['get_duration',['../classcore_1_1Core.html#af7be1f91a6948315bba70e50377d9989',1,'core::Core']]],
+  ['get_5ffine',['get_fine',['../classcore_1_1Core.html#a88d4502848ce45696765d9919120e932',1,'core::Core']]],
+  ['get_5ffine_5fby_5fid',['get_fine_by_id',['../classcore_1_1Core.html#aaa515f522a95053bce18a623a20ad666',1,'core::Core']]],
+  ['get_5ffines',['get_fines',['../namespaceinterface.html#ad429140e0566060a1e5fdbefa462d4f0',1,'interface']]],
+  ['get_5fmax_5fid',['get_max_id',['../classdatabase_1_1DataBase.html#ad9dad4d6bb6310119ca766e8d1d3c500',1,'database.DataBase.get_max_id()'],['../classmongo__database_1_1DataBase.html#a61555b7ba46fbad54d26d532d0cf105c',1,'mongo_database.DataBase.get_max_id()']]],
+  ['get_5fnames_5fand_5ftypes_5ffrom_5fqueue',['get_names_and_types_from_queue',['../namespaceinterface.html#a4df8bca5bcaab7ca99420799cdbbcbf2',1,'interface']]],
+  ['get_5fnotifications',['get_notifications',['../classcore_1_1Core.html#a683911f8da8acfb63abbd95d9c4b2ad0',1,'core::Core']]],
+  ['get_5foverdue',['get_overdue',['../classcore_1_1Core.html#a2025d8c92b97d97f2dd5980264c3f418',1,'core.Core.get_overdue()'],['../namespaceinterface.html#a395cf49a503374365b99961c1ca7e3c9',1,'interface.get_overdue()']]],
+  ['get_5foverdue_5fby_5fid',['get_overdue_by_id',['../classcore_1_1Core.html#a6c2223635ef1d6902d3491ba8c809057',1,'core::Core']]],
+  ['get_5fpermissions',['get_permissions',['../classcore_1_1Core.html#a72f8138ec87193b1bba4d0dd78ec7ca9',1,'core::Core']]],
+  ['get_5fqueue',['get_queue',['../classcore_1_1Core.html#a0f9df71022b415680e6b9e93308359bb',1,'core::Core']]],
+  ['get_5fusers',['get_users',['../namespaceinterface.html#a68d3e16e63e3824bc97a02c39cb61752',1,'interface']]],
+  ['give_5fback',['give_back',['../classcore_1_1Core.html#a84e901fc2f42517022174adf0e4b2137',1,'core::Core']]]
+];

@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['add',['add',['../classcore_1_1Core.html#ac5bbaced7a14146e5a3b5408c7dd8352',1,'core.Core.add()'],['../classdatabase_1_1DataBase.html#ab3a7806cdd3110f7383913c366d2fe83',1,'database.DataBase.add()'],['../classmongo__database_1_1DataBase.html#ac2cb51745a17e8d54e761ea6a42bec17',1,'mongo_database.DataBase.add()']]],
+  ['add_5fcopy',['add_copy',['../classcore_1_1Core.html#a5470dd25e10064edd5505eaf16773d33',1,'core::Core']]],
+  ['add_5fdocument',['add_document',['../namespaceinterface.html#aa7112534e311063b675a110cedca7105',1,'interface']]],
+  ['add_5fdocument_5fwith_5fcopies',['add_document_with_copies',['../classcore_1_1Core.html#aff6f93b1cae8d411fea5855e25d4e699',1,'core::Core']]],
+  ['add_5fdocuments',['add_documents',['../namespaceinterface.html#a494c7096d52f4af7541227f77ba1cc91',1,'interface']]],
+  ['add_5fn_5fcopies',['add_n_copies',['../namespaceinterface.html#a48b4c6fc4eff90e1c9d40ea0cff96316',1,'interface']]],
+  ['addavform',['AddAVForm',['../classforms_1_1AddAVForm.html',1,'forms']]],
+  ['addbookform',['AddBookForm',['../classforms_1_1AddBookForm.html',1,'forms']]],
+  ['addcopies',['AddCopies',['../classforms_1_1AddCopies.html',1,'forms']]],
+  ['addjournalform',['AddJournalForm',['../classforms_1_1AddJournalForm.html',1,'forms']]],
+  ['addreferencebookform',['AddReferenceBookForm',['../classforms_1_1AddReferenceBookForm.html',1,'forms']]],
+  ['address',['address',['../classforms_1_1EditProfileForm.html#aaeefaefef550f84ae11755d4133d220d',1,'forms.EditProfileForm.address()'],['../classforms_1_1RegistrationForm.html#ae21a53a3ccdfcc7b4226eba3e5648d74',1,'forms.RegistrationForm.address()']]],
+  ['all_5fnotifications',['all_notifications',['../namespaceinterface.html#a968fa972356f1558d8a3abf90be7d0bb',1,'interface']]],
+  ['app',['app',['../namespaceinterface.html#acece825df764f646248f5f5140d16d58',1,'interface']]],
+  ['append_5frequest_5flist',['append_request_list',['../classcore_1_1Core.html#ae7689f94834a33b69a39ec2fa869979b',1,'core::Core']]],
+  ['approve',['approve',['../classforms_1_1ApproveDocumentForm.html#a5bcb8bfd08cb0f70d045aae41308123e',1,'forms.ApproveDocumentForm.approve()'],['../classcore_1_1Core.html#aea3308e9dbdad46d19832577c23e6154',1,'core.Core.approve()']]],
+  ['approve_5fcheck_5fout',['approve_check_out',['../classcore_1_1Core.html#a8e48c049f718ce9afba237e0d3d63f11',1,'core::Core']]],
+  ['approve_5fcmd',['approve_cmd',['../classcore_1_1Core.html#a4f063a74febed4bf85eb9d0f1943c9b5',1,'core::Core']]],
+  ['approve_5freturn',['approve_return',['../classcore_1_1Core.html#aae709095b881e612e0e9ea6e340db5e5',1,'core::Core']]],
+  ['approvedocumentform',['ApproveDocumentForm',['../classforms_1_1ApproveDocumentForm.html',1,'forms']]],
+  ['approveform',['ApproveForm',['../classforms_1_1ApproveForm.html',1,'forms']]],
+  ['attributes',['attributes',['../classcommand_1_1Command.html#a6f0711215a670b0f522bc807577de123',1,'command::Command']]],
+  ['authors',['authors',['../classforms_1_1AddBookForm.html#a584b609d20bbb7cae28ba786d17f2f4c',1,'forms.AddBookForm.authors()'],['../classforms_1_1AddReferenceBookForm.html#a5c18fbce20ee94a9d50044d80ef78d1f',1,'forms.AddReferenceBookForm.authors()'],['../classforms_1_1AddJournalForm.html#a0c44aa57687531cac5d83e41c98a1a28',1,'forms.AddJournalForm.authors()'],['../classforms_1_1AddAVForm.html#ad516e69177ab0dc8ff5e26ee1d65df55',1,'forms.AddAVForm.authors()']]]
+];
