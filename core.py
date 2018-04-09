@@ -21,6 +21,7 @@ class Core:
 	id = 0
 	"""Current id"""
 	request_list = {'last_modified': None, 'requests': []}
+	"""List of all users who must checkout a document today"""
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
@@ -55,21 +56,21 @@ class Core:
 		else:
 			return None
 
-	def search(self, string):
-		pass
-
 	@staticmethod
 	def check_available_copy(copy):
+		"""Check if the copy is available"""
 		return copy['attributes']['user_id'] is None
 
 	@staticmethod
 	def get_overdue(item):
+		"""Get overdue of the item"""
 		if not Core.check_available_copy(item):
 			return (datetime.datetime.now() - datetime.datetime.strptime(item['attributes']['deadline'], '%d/%m/%Y')).days
 		else:
 			return None
 
 	def get_fine(self, item):
+		"""Get fine of the item"""
 		overdue = Core.get_overdue(item)
 		if overdue is None or overdue <= 0:
 			return 0
@@ -77,6 +78,7 @@ class Core:
 		return min(overdue * 100, price)
 
 	def check_overdue(self, i):
+		"""Check if the item is overdue"""
 		overdue = self.get_overdue(i)
 		if overdue is None or overdue <= 0:
 			return False
@@ -84,24 +86,28 @@ class Core:
 			return True
 
 	def check_fine(self, i):
+		"""Check if the item has fines"""
 		if self.get_fine(i):
 			return True
 		else:
 			return False
 
 	def get_overdue_by_id(self, copy_id):
+		"""Get the overdue of the copy with current id"""
 		item = self.find_by_id(copy_id)
 		if item['type'] != 'copy':
 			return None
 		return Core.get_overdue(item)
 
 	def get_fine_by_id(self, copy_id):
+		"""Get the fine of the copy with current id"""
 		item = self.find_by_id(copy_id)
 		if item['type'] != 'copy':
 			return None
 		return self.get_fine(item)
 
 	def get_all_users_with_overdue(self):
+		"""Get all users with overdue"""
 		users = set()
 		copies = self.find('copy', dict())
 		for i in copies:
@@ -112,15 +118,18 @@ class Core:
 		return list(users)
 
 	def get_all_unconfirmed_users(self):
+		"""Get all unconfirmed users"""
 		return list(self.db.courteous_lookup({"type": "unconfirmed"}))
 
 	def delete_available_copies(self, doc_id):
+		"""Delete all copies of the document which aren't checked out now"""
 		copies = self.find('copy', {'origin_id': doc_id})
 		for i in copies:
 			if self.check_available_copy(i):
 				self.delete(i['id'])
 
 	def delete_book(self, doc_id):
+		"""Delete document with current id"""
 		copies = self.find('copy', {'origin_id': doc_id})
 		if all(self.check_available_copy(i) for i in copies):
 			self.delete_available_copies(doc_id)
@@ -131,16 +140,19 @@ class Core:
 			return False
 
 	def delete_all_requests(self, doc_id):
+		"""Delete all requests for the document"""
 		requests = [i for i in self.find('request', {}) if i['attributes']['target_id'] == doc_id]
 		for i in requests:
 			self.delete(i['id'])
 
 	def add_document_with_copies(self, target, attributes, n):
+		"""Add new document and n copies of this document"""
 		id = self.add(target, attributes)
 		for i in range(n):
 			self.add_copy(id)
 
 	def get_all_checked_out_documents(self):
+		"""Get all documents which have at least one checked out copy"""
 		documents = set()
 		copies = self.find('copy', dict())
 		for i in copies:
@@ -150,16 +162,19 @@ class Core:
 			documents = self.courteous_find({"$or": [{"id": i} for i in documents]})
 		return list(documents)
 
-	def courteous_find(self, attributes):
-		return self.db.courteous_lookup(attributes)
+#	def courteous_find(self, attributes):
+#		return self.db.courteous_lookup(attributes)
 
 	def find_all_documents(self):
-		return self.courteous_find({"$or":[{'type': i['type']} for i in self.documents]})
+		"""Get all documents"""
+		return sum([self.find(i['type'], {}) for i in self.documents], [])
 
 	def find_all_users(self):
-		return self.courteous_find({"$or":[{'type': i['type']} for i in self.users]})
+		"""Get all users"""
+		return sum([self.find(i['type'], {}) for i in self.users], [])
 
 	def find_by_id(self, id):
+		"""Get an item by id"""
 		return self.db.get_by_id(id)
 
 	def delete(self, id, attributes = None):
@@ -177,6 +192,7 @@ class Core:
 		return self.db.modify(id, old_attributes)
 
 	def modify_user(self, user_id, attributes):
+		"""Modify users attributes"""
 		user = self.find_by_id(user_id)
 		for item, value in attributes.items():
 			user['attributes'][item] = value
@@ -247,6 +263,7 @@ class Core:
 			return False
 
 	def request(self, doc_id, action):
+		"""Request an action with a document"""
 		if action not in ['check-out', 'return']:
 			return False
 		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'action': action}
@@ -257,18 +274,21 @@ class Core:
 			return True
 
 	def approve_cmd(self, id, attributes = None):
+		"""Approve an action (with console signature)"""
 		id = int(id)
 		request = self.find_by_id(id)
 		action = request['attributes']['action']
 		return self.approve(id, action)
 
 	def decline_cmd(self, id, attributes = None):
+		"""Decline an action (with console signature)"""
 		id = int(id)
 		request = self.find_by_id(id)
 		action = request['attributes']['action']
 		return self.decline(id, action)
 
 	def approve(self, request_id, action):
+		"""Approve an action"""
 		request = self.find_by_id(request_id)
 		if request['type'] != 'request':
 			return False
@@ -290,6 +310,7 @@ class Core:
 			return False
 
 	def decline(self, request_id, action):
+		"""Approve an action"""
 		request = self.find_by_id(request_id)
 		if request['type'] != 'request':
 			return False
@@ -301,11 +322,13 @@ class Core:
 			return self.delete(request_id)
 
 	def delete_queue(self, doc_id):
+		"""Delete all requests in the queue"""
 		queue = self.get_queue(doc_id)
 		for i in queue:
 			self.delete(i['id'])
 
 	def can_renew(self, id):
+		"""Check if it is possible to renew the current document for the current user"""
 		if self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
 			return False
 		if self.placed_outstanding_request(id):
@@ -318,32 +341,49 @@ class Core:
 		return not self.check_overdue(copy)
 
 	def request_check_out(self, doc_id):
-		return self.request(doc_id, 'check-out')
+		"""Request check out a document"""
+		result = self.request(doc_id, 'check-out')
+		if not self.delete_available_copies(doc_id) and result:
+			message = 'You are added in a queue for the document with id {} because the document is not available right now'
+			self.notify(self.current_user['id'], message.format(doc_id))
+		return result
 
 	def approve_check_out(self, request_id):
-		return self.approve(request_id, 'check-out')
+		"""Approve check out"""
+		result = self.approve(request_id, 'check-out')
+		self.notify_queue(self.find_by_id(request_id['attributes']['target_id']))
+		return result
 
 	def decline_check_out(self, request_id):
-		return self.decline(request_id, 'check-out')
+		"""Decline check out"""
+		result = self.decline(request_id, 'check-out')
+		self.notify_queue(self.find_by_id(request_id['attributes']['target_id']))
+		return result
 
 	def request_return(self, doc_id):
+		"""Request return a document"""
 		return self.request(doc_id, 'return')
 
 	def approve_return(self, request_id):
+		"""Approve return"""
 		return self.approve(request_id, 'return')
 
 	def decline_return(self, request_id):
+		"""Decline return"""
 		return self.decline(request_id, 'return')
 
 	def request_check_out_cmd(self, id, attibutes = None):
+		"""Request check out a document (with console signature)"""
 		return self.request_check_out(int(id))
 
 	def get_queue(self, id):
+		"""Get queue for current document"""
 		priority = ['student', 'visiting-professor', 'faculty']
 		return sorted(self.find('request', {'target_id': id, 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
 
 	@staticmethod
 	def get_duration(user_type, doc_type):
+		"""Get how long a user with current type can hold a document with current type"""
 		duration = 21
 		if user_type == 'visiting-professor':
 			duration = 7
@@ -354,6 +394,7 @@ class Core:
 		return datetime.timedelta(days=duration)
 
 	def renew(self, id, attributes=None):
+		"""Renew a document"""
 		id = int(id)
 		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
 		if copy and not self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
@@ -365,16 +406,18 @@ class Core:
 		return False
 
 	def notify(self, user_id, message):
+		"""Notify a user"""
 		return self.add('notification', {'user_id': user_id, 'date': datetime.datetime.now().strftime('%d/%m/%Y'), 'message': message})
 
 	def outstanding_request(self, doc_id):
+		"""Place an outstanding request on the document"""
 		if self.current_user['type'] != 'librarian':
 			return False
 		doc = self.find_by_id(doc_id)
 		if not self.check_document_type(doc['type']):
 			return False
 		queue = self.get_queue(doc_id)
-		message = 'You have been removed from the waiting list of the document with id {} because of an outstanding request'
+		message = 'have been removed from the waiting list of the document with id {} because of an outstanding request'
 		for request in queue:
 			self.notify(request['attributes']['user_id'], message.format(doc_id))
 		self.delete_queue(doc_id)
@@ -388,6 +431,7 @@ class Core:
 		return True
 
 	def delete_outstanding_request(self, doc_id):
+		"""Delete an outstanding request"""
 		request = self.find('outstanding-request', {'target_id': doc_id})
 		if request:
 			request = request[0]
@@ -396,24 +440,30 @@ class Core:
 		return self.delete(request['id'])
 
 	def placed_outstanding_request(self, doc_id):
+		"""Check if an outstanding request is placed on the document"""
 		return self.find('outstanding-request', {'target_id': doc_id}) != []
 
 	@staticmethod
 	def sort_notifications(notifications):
+		"""Sort notification in chronological order"""
 		return list(reversed(sorted(notifications, key = lambda x: datetime.datetime.strptime(x['attributes']['date'], '%d/%m/%Y'))))
 
 	def get_notifications(self, user_id):
+		"""Get all notifications for current user"""
 		return Core.sort_notifications(self.find('notification', {'user_id': user_id}))
 
 	def get_all_notifications(self):
+		"""Get all notifications for all users"""
 		return Core.sort_notifications(self.find('notification', {}))
 
 	def delete_all_notifications(self):
+		"""Delete all notifications for all users"""
 		notifications = self.get_all_notifications()
 		for notification in notifications:
 			self.delete(notification['id'])
 
 	def normalize_request_list(self):
+		"""Normalize request list (delete old requests and notify users)"""
 		date = datetime.datetime.now().strftime('%d/%m/%Y')
 		if date != self.request_list['last_modified']:
 			temp_list = []
@@ -430,11 +480,20 @@ class Core:
 				message = 'Your request of the document with id {} was deleted because you haven\'t checked it out'
 				self.notify(r['attributes']['user_id'], message.format(doc_id))
 				self.delete(r['id'])
+				self.notify_queue(doc_id)
 			self.request_list['requests'] = temp_list
 
 	def append_request_list(self, request):
+		"""Add new request in request list"""
 		self.normalize_request_list()
 		self.request_list['requests'].append(request)
+
+	def notify_queue(self, doc_id):
+		"""Notify all users in the queue about how long they should wait for a document"""
+		queue = self.get_queue(doc_id)
+		message = 'You will be able to check out a document with id ' + str(doc_id) + ' in {} days'
+		for i in range(len(queue)):
+			self.notify(queue[i]['attributes']['user_id'], message.format(14 * (i + 1)))
 
 	def check_out(self, doc_id, user_id):
 		"""Checkout document"""
@@ -472,6 +531,7 @@ class Core:
 			return True
 
 	def check_copies(self, id, attributes):
+		"""Get all copies all books or all copies of one book"""
 		if id == '':
 			return self.find('copy', {})
 		else:

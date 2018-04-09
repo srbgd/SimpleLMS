@@ -53,10 +53,12 @@ class DataBase:
 		return False
 
 	def drop(self):
+		"""Drop database"""
 		self.db = []
 		self.update()
 
 	def get_by_id(self, id):
+		"""Get item by id"""
 		found = [i for i in self.db if i['id'] == id]
 		return found[0] if found else []
 
