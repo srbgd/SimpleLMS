@@ -374,7 +374,7 @@ class Core:
 		if not self.check_document_type(doc['type']):
 			return False
 		queue = self.get_queue(doc_id)
-		message = 'have been removed from the waiting list of the document with id {} because of an outstanding request'
+		message = 'You have been removed from the waiting list of the document with id {} because of an outstanding request'
 		for request in queue:
 			self.notify(request['attributes']['user_id'], message.format(doc_id))
 		self.delete_queue(doc_id)
