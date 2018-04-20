@@ -8,6 +8,7 @@ class Interface:
 	"""Core object"""
 	test_mode = False
 	"""Command line mode"""
+	current_user = None
 
 	def __init__(self, core, mode):
 		"""Initialize interface"""
@@ -26,7 +27,9 @@ class Interface:
 		"""Change current user"""
 		alias = self.input('Login: ').strip()
 		password = self.input('Password: ')
-		if self.core.login(alias, password):
+		user = self.core.login(alias, password)
+		if user:
+			self.current_user = user
 			print('Success' + ('' if self.test_mode else '\n'))
 			return True
 		else:
@@ -53,4 +56,4 @@ class Interface:
 				self.login()
 			else:
 				command, target, attributes = Interface.parse(cmd)
-				print(self.core.execute(Command(command, attributes, target)))
+				print(self.core.execute(self.current_user, Command(command, attributes, target)))

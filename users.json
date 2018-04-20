@@ -1,10 +1,5 @@
 [
   {
-    "type": "librarian",
-    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy", "approve", "decline"],
-    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
-  },
-  {
     "type": "faculty",
     "permissions": ["find", "checkout", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
@@ -19,10 +14,24 @@
     "permissions": ["find", "checkout", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
-
   {
     "type": "unconfirmed",
     "permissions": ["find"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
-  }
+  },
+  {
+    "type": "librarian-privilege-1",
+    "permissions": ["modify", "check", "find", "approve", "decline"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  },
+  {
+    "type": "librarian-privilege-2",
+    "permissions": ["modify", "register", "insert", "check", "find", "copy", "approve", "decline", "outstanding-request"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  },
+  {
+    "type": "librarian-privilege-3",
+    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy", "approve", "decline"],
+    "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
+  },
 ]
