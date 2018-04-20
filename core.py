@@ -240,7 +240,7 @@ class Core:
 		if user:
 			self.permissions = self.get_permissions(user[0])
 			self.normalize_request_list()
-			return user[0]
+			return user[0]['id']  # Warning, I needed user_id
 		else:
 			return False
 
@@ -545,8 +545,8 @@ class Core:
 		return True
 
 	def init_admin(self, password):
-		self.insert('admin', {'login': 'admin', 'password': password})
-		self.admin = self.find('admin')[0]
+		self.register('admin', {'login': 'admin', 'password': password})
+		self.admin = self.find('admin', {})[0]
 
 	def init_db(self, mode):
 		"""Initialize database"""
