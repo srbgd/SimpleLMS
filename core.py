@@ -267,6 +267,7 @@ class Core:
 
 	def request(self, doc_id, action, current_user):
 		"""Request an action with a document"""
+		print(current_user)
 		if action not in ['check-out', 'return']:
 			return False
 		type, attributes = 'request', {'user_id': current_user['id'], 'target_id': doc_id, 'action': action}
@@ -346,21 +347,23 @@ class Core:
 	def request_check_out(self, doc_id, current_user):
 		"""Request check out a document"""
 		result = self.request(doc_id, 'check-out', current_user)
-		if not self.delete_available_copies(doc_id) and result:
+		if all(not self.check_available_copy(i) for i in self.find('copy', {'origin_id': doc_id})) and result:
 			message = 'You are added in a queue for the document with id {} because the document is not available right now'
 			self.notify(current_user['id'], message.format(doc_id))
 		return result
 
 	def approve_check_out(self, request_id, current_user):
 		"""Approve check out"""
+		request = self.find_by_id(request_id)
 		result = self.approve(request_id, 'check-out', current_user)
-		self.notify_queue(self.find_by_id(request_id)['attributes']['target_id'])
+		self.notify_queue(request['attributes']['target_id'])
 		return result
 
 	def decline_check_out(self, request_id, current_user):
 		"""Decline check out"""
+		request = self.find_by_id(request_id)
 		result = self.decline(request_id, 'check-out', current_user)
-		self.notify_queue(self.find_by_id(request_id)['attributes']['target_id'])
+		self.notify_queue(request['attributes']['target_id'])
 		return result
 
 	def request_return(self, doc_id, current_user):

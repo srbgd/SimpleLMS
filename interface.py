@@ -21,7 +21,8 @@ def login_required(func):
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		user_id = session.get('user_id')
-		print(user_id)
+		# print(user_id)
+		# assert type(user_id) == int
 		if user_id is not None:
 			return func(*args, **kwargs)
 		else:
@@ -32,6 +33,7 @@ def login_required(func):
 
 def can_do_a_thing(thing, user_id):
 	if user_id is not None:
+		# print("thing", thing, core.get_permissions(core.find_by_id(user_id)))
 		if thing in core.get_permissions(core.find_by_id(user_id)):
 			return True
 		else:
@@ -45,6 +47,7 @@ def can_modify(func):
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		user_id = session.get('user_id')
+		# assert type(user_id) == int
 		can_do = can_do_a_thing('modify', user_id)
 		if can_do is True:
 			return func(*args, **kwargs)
@@ -57,7 +60,8 @@ def can_edit_user_page(func):
 	@wraps(func)
 	def wrapper(user_id):
 		current_user_id = session.get('user_id')
-		can_do = can_do_a_thing('modify', user_id)
+		can_do = can_do_a_thing('modify', current_user_id)
+		print(current_user_id, user_id, can_do)
 		if can_do is True or current_user_id == user_id:
 			return func(user_id)
 		else:
@@ -70,6 +74,7 @@ def can_check_out(func):
 	def wrapper(*args, **kwargs):
 		user_id = session.get('user_id')
 		can_do = can_do_a_thing('checkout', user_id)
+		# print("can_do", can_do)
 		if can_do is True:
 			return func(*args, **kwargs)
 		else:
@@ -172,7 +177,15 @@ def document(doc_id):
 			copy_id = 0
 		priority_queue = core.get_queue(doc_id)
 		names_and_types = get_names_and_types_from_queue(priority_queue)
-		print(core.placed_outstanding_request(doc_id))
+		# print(core.placed_outstanding_request(doc_id))
+		# print("hey")
+		# print(get_overdue(copy))
+
+		# "C:\Users\Asus\Projects\slms2\core.py", line
+		# 364, in decline_check_out
+		# self.notify_queue(self.find_by_id(request_id)['attributes']['target_id'])
+		# requested_to_return = user_requested_to_return(copy_id)
+		# print(requested_to_return)
 		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=get_current_user(),
 								available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
 								names=names, overdue_days=overdue_days(held_copies), requested=user_requested(doc_id),
@@ -193,7 +206,7 @@ def get_names_and_types_from_queue(priority_queue):
 
 
 @app.route("/renew/<int:doc_id>")
-@can_modify
+@can_check_out
 def renew(doc_id):
 	"""Renew a document by current user"""
 	if not core.renew(doc_id, get_current_user()):
@@ -202,9 +215,10 @@ def renew(doc_id):
 
 
 @can_check_out
-def user_requested_to_return(doc_id):
+def user_requested_to_return(copy_id):
 	"""Check if user requested to return a document"""
-	return (core.find("request", {"action": "return", "target_id": doc_id, "user_id": get_current_user()['id']})) != []
+	# print("request", core.find("request", {"action": "return", "target_id": doc_id, "user_id": get_current_user()['id']}))
+	return (core.find("request", {"action": "return", "target_id": copy_id, "user_id": get_current_user()['id']})) != []
 
 
 @can_check_out
@@ -421,6 +435,7 @@ def login():
 	form = LoginForm()
 	if form.validate_on_submit():
 		user_id = core.login(form.login.data, form.password.data)
+		assert type(user_id) == int
 		if user_id is not False:
 			session['user_id'] = user_id
 			flash('Login requested for user {}, remember_me={}'.format(
@@ -437,7 +452,6 @@ def user(user_id):
 	documents_names = user_documents_names(copies)
 	(overdues_and_fines, total_fine) = overdue_days_and_fines(copies)
 	notifications = core.get_notifications(user_id)
-	print(notifications)
 	return render_template("users/user.html", user=get_current_user(), a_user=core.find_by_id(user_id), copies=copies,
 											documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine, notifications=notifications)
 
@@ -589,25 +603,35 @@ def documents_requests():
 	else:
 		users = []
 		documents = []
-	forms = [ApproveDocumentForm(request.form) for i in range(len(requests))]
-	for i in range(len(forms)):
-		if forms[i].validate_on_submit():
-			if forms[i].approve.data:
-				if requests[i]['attributes']['action'] == "check-out":
-					if not core.approve_check_out(requests[i]['id'], get_current_user()):
-						flash("failed")
-				else:
-					if not core.approve_return(requests[i]['id'], get_current_user()):
-						flash("failed")
-			elif forms[i].decline.data:
-				if requests[i]['attributes']['action'] == "check-out":
-					if not core.decline_check_out(requests[i]['id'], get_current_user()):
-						flash("failed")
-				else:
-					if not core.decline_return(requests[i]['id'], get_current_user()):
-						flash("failed")
-			return redirect(url_for("documents_requests"))
-	return render_template("documents/documents_requests.html", user=get_current_user(), requests=requests, users=users, documents=documents, forms=forms)
+	return render_template("documents/documents_requests.html", user=get_current_user(), requests=requests, users=users, documents=documents)
+
+
+@app.route('/approve_request/<int:req_id>')
+@can_modify
+def approve_request(req_id):  # TODO: if didn't find req
+	req = core.find_by_id(req_id)
+	if req['attributes']['action'] == "check-out":
+		if not core.approve_check_out(req['id'], get_current_user()):
+			flash("failed to approve check out")
+	else:
+		if not core.approve_return(req['id'], get_current_user()):
+			flash("failed to approve return")
+	return redirect(url_for("documents_requests"))
+
+
+@app.route('/decline_request/<int:req_id>')
+@can_modify
+def decline_request(req_id):
+	req = core.find_by_id(req_id)
+	if req['attributes']['action'] == "check-out":
+		if not core.decline_check_out(req['id'], get_current_user()):
+			flash("failed to decline check out")
+	else:
+		if not core.decline_return(req['id'], get_current_user()):
+			flash("failed to decline return")
+	return redirect(url_for("documents_requests"))
+
+
 
 
 @app.route('/request_document/<int:doc_id>', methods=["GET", "POST"])
@@ -657,8 +681,15 @@ def all_notifications():
 		return render_template("users/all_notifications.html", notifications=notifications, user=get_current_user())
 
 
+@app.route('/delete_all_notifications')
+@can_modify
+def delete_all_notifications():
+	core.delete_all_notifications()
+	return redirect(url_for('all_notifications'))
+
+
 if __name__ == '__main__':
 	core = Core(True)
-	app.run(debug=True, threaded = True)
+	app.run(debug=True, threaded=True)
 
 
