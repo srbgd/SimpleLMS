@@ -25,7 +25,7 @@ class EditProfileForm(FlaskForm):
 
 
 class AddCopies(FlaskForm):
-    number = IntegerField('Add number of copies')
+    number = IntegerField('Add number of copies', validators=[NumberRange(min=0)])
 
 
 class SearchForm(FlaskForm):

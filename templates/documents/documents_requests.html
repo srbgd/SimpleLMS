@@ -13,9 +13,8 @@
             <span class="lists"> by {{users[loop.index0].attributes.name}} </span>
             <span class="lists">document {{documents[loop.index0].attributes.title}}
                 <form action="" method="post">
-                {{ forms[loop.index0].hidden_tag() }}
-                {{forms[loop.index0].approve}}
-                {{forms[loop.index0].decline}}
+                    <a href="{{url_for('approve_request', req_id = request.id)}}">Approve</a>
+                    <a href="{{url_for('decline_request', req_id = request.id)}}">Decline</a>
             </form></span>
              </p>
             </li>
