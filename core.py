@@ -6,7 +6,7 @@ import json
 class Core:
 	"""Core class"""
 
-	current_user = None
+	# current_user = None
 	"""Current user"""
 	permissions = []
 	"""List of command which are allowed to execute for current user"""
@@ -22,6 +22,7 @@ class Core:
 	"""Current id"""
 	request_list = {'last_modified': None, 'requests': []}
 	"""List of all users who must checkout a document today"""
+	admin = None
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
@@ -119,7 +120,7 @@ class Core:
 
 	def get_all_unconfirmed_users(self):
 		"""Get all unconfirmed users"""
-		return list(self.db.courteous_lookup({"type": "unconfirmed"}))
+		return self.find('unconfirmed', {})
 
 	def delete_available_copies(self, doc_id):
 		"""Delete all copies of the document which aren't checked out now"""
@@ -162,8 +163,8 @@ class Core:
 			documents = self.courteous_find({"$or": [{"id": i} for i in documents]})
 		return list(documents)
 
-#	def courteous_find(self, attributes):
-#		return self.db.courteous_lookup(attributes)
+	def courteous_find(self, attributes):
+		return self.db.courteous_lookup(attributes)
 
 	def find_all_documents(self):
 		"""Get all documents"""
@@ -233,24 +234,20 @@ class Core:
 	def login(self, login = None, password = None):
 		"""Change current user"""
 		if login is password is None:
-			self.current_user = None
 			self.normalize_request_list()
 			return True
-		if login == password == '':
-			for i in self.users:
-				for j in i['permissions']:
-					if j not in self.permissions:
-						self.permissions.append(j)
-			self.normalize_request_list()
-			return True
-		user = self.db.lookup('', {'login': login, 'password': password})
+		user = self.find('', {'login': login, 'password': password})
 		if user:
-			self.current_user = user[0]
 			self.permissions = self.get_permissions(user[0])
 			self.normalize_request_list()
-			return True
+			return user[0]
 		else:
 			return False
+
+	def check_permissions(self, user_type, command):
+		if user_type == 'admin':
+			return True
+		return command in [i for i in self.users if i['type'] == user_type][0]['permissions']
 
 	def add_copy(self, id, attributes = None):
 		"""Add copy to database"""
@@ -262,11 +259,11 @@ class Core:
 		else:
 			return False
 
-	def request(self, doc_id, action):
+	def request(self, doc_id, action, current_user):
 		"""Request an action with a document"""
 		if action not in ['check-out', 'return']:
 			return False
-		type, attributes = 'request', {'user_id': self.current_user['id'], 'target_id': doc_id, 'action': action}
+		type, attributes = 'request', {'user_id': current_user['id'], 'target_id': doc_id, 'action': action}
 		if self.find(type, attributes):
 			return False
 		else:
@@ -287,14 +284,14 @@ class Core:
 		action = request['attributes']['action']
 		return self.decline(id, action)
 
-	def approve(self, request_id, action):
+	def approve(self, request_id, action, current_user):
 		"""Approve an action"""
 		request = self.find_by_id(request_id)
 		if request['type'] != 'request':
 			return False
 		elif request['attributes']['action'] != action:
 			return False
-		elif self.current_user['type'] != 'librarian':
+		elif not self.check_permissions(current_user['type'], 'approve'):
 			return False
 		else:
 			if action == 'check-out':
@@ -309,14 +306,14 @@ class Core:
 				return result
 			return False
 
-	def decline(self, request_id, action):
+	def decline(self, request_id, action, current_user):
 		"""Approve an action"""
 		request = self.find_by_id(request_id)
 		if request['type'] != 'request':
 			return False
 		elif request['attributes']['action'] != action:
 			return False
-		elif self.current_user['type'] != 'librarian':
+		elif not self.check_permissions(current_user['type'], 'decline'):
 			return False
 		else:
 			return self.delete(request_id)
@@ -327,50 +324,52 @@ class Core:
 		for i in queue:
 			self.delete(i['id'])
 
-	def can_renew(self, id):
+	def can_renew(self, id, current_user):
 		"""Check if it is possible to renew the current document for the current user"""
-		if self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
+		if self.find('renew', {'user_id': current_user['id'], 'origin_id': id}):
 			return False
 		if self.placed_outstanding_request(id):
 			return False
-		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
+		copy = self.find('copy', {'user_id': current_user['id'], 'origin_id': id})
 		if copy:
 			copy = copy[0]
 		else:
 			return False
 		return not self.check_overdue(copy)
 
-	def request_check_out(self, doc_id):
+	def request_check_out(self, doc_id, current_user):
 		"""Request check out a document"""
-		result = self.request(doc_id, 'check-out')
-		if not self.delete_available_copies(doc_id) and result:
+		result = self.request(doc_id, 'check-out', current_user)
+		if all(not self.check_available_copy(i) for i in self.find('copy', {'origin_id': doc_id})) and result:
 			message = 'You are added in a queue for the document with id {} because the document is not available right now'
-			self.notify(self.current_user['id'], message.format(doc_id))
+			self.notify(current_user['id'], message.format(doc_id))
 		return result
 
-	def approve_check_out(self, request_id):
+	def approve_check_out(self, request_id, current_user):
 		"""Approve check out"""
-		result = self.approve(request_id, 'check-out')
-		self.notify_queue(self.find_by_id(request_id['attributes']['target_id']))
+		request = self.find_by_id(request_id)
+		result = self.approve(request_id, 'check-out', current_user)
+		self.notify_queue(request['attributes']['target_id'])
 		return result
 
-	def decline_check_out(self, request_id):
+	def decline_check_out(self, request_id, current_user):
 		"""Decline check out"""
-		result = self.decline(request_id, 'check-out')
-		self.notify_queue(self.find_by_id(request_id['attributes']['target_id']))
+		request = self.find_by_id(request_id)
+		result = self.decline(request_id, 'check-out', current_user)
+		self.notify_queue(request['attributes']['target_id'])
 		return result
 
-	def request_return(self, doc_id):
+	def request_return(self, doc_id, current_user):
 		"""Request return a document"""
-		return self.request(doc_id, 'return')
+		return self.request(doc_id, 'return', current_user)
 
-	def approve_return(self, request_id):
+	def approve_return(self, request_id, current_user):
 		"""Approve return"""
-		return self.approve(request_id, 'return')
+		return self.approve(request_id, 'return', current_user)
 
-	def decline_return(self, request_id):
+	def decline_return(self, request_id, current_user):
 		"""Decline return"""
-		return self.decline(request_id, 'return')
+		return self.decline(request_id, 'return', current_user)
 
 	def request_check_out_cmd(self, id, attibutes = None):
 		"""Request check out a document (with console signature)"""
@@ -393,14 +392,14 @@ class Core:
 			duration = 14
 		return datetime.timedelta(days=duration)
 
-	def renew(self, id, attributes=None):
+	def renew(self, id, current_user, attributes=None):
 		"""Renew a document"""
 		id = int(id)
-		copy = self.find('copy', {'user_id': self.current_user['id'], 'origin_id': id})
-		if copy and not self.find('renew', {'user_id': self.current_user['id'], 'origin_id': id}):
-			if self.current_user['type'] != 'visiting-professor':
-				self.add('renew', {'user_id': self.current_user['id'], 'origin_id': id})
-			timedelta = Core.get_duration(self.current_user['type'], self.find_by_id(id)['type'])
+		copy = self.find('copy', {'user_id': current_user['id'], 'origin_id': id})
+		if copy and not self.find('renew', {'user_id': current_user['id'], 'origin_id': id}):
+			if current_user['type'] != 'visiting-professor':
+				self.add('renew', {'user_id': current_user['id'], 'origin_id': id})
+			timedelta = Core.get_duration(current_user['type'], self.find_by_id(id)['type'])
 			self.modify(copy[0]['id'], {'deadline': (datetime.datetime.now() + timedelta).strftime('%d/%m/%Y')})
 			return True
 		return False
@@ -409,9 +408,9 @@ class Core:
 		"""Notify a user"""
 		return self.add('notification', {'user_id': user_id, 'date': datetime.datetime.now().strftime('%d/%m/%Y'), 'message': message})
 
-	def outstanding_request(self, doc_id):
+	def outstanding_request(self, doc_id, current_user):
 		"""Place an outstanding request on the document"""
-		if self.current_user['type'] != 'librarian':
+		if not self.check_permissions(current_user['type'], 'outstanding-request'):
 			return False
 		doc = self.find_by_id(doc_id)
 		if not self.check_document_type(doc['type']):
@@ -540,11 +539,14 @@ class Core:
 	def drop(self, id, attributes):
 		"""Clear database"""
 		self.db.drop()
-		self.current_user = None
 		self.id = 0
 		self.permissions = []
 		self.login('', '')
 		return True
+
+	def init_admin(self, password):
+		self.insert('admin', {'login': 'admin', 'password': password})
+		self.admin = self.find('admin')[0]
 
 	def init_db(self, mode):
 		"""Initialize database"""
@@ -588,9 +590,11 @@ class Core:
 		"""Get permissions of current type of user"""
 		return [i for i in self.users if i['type'] == user['type']][0]['permissions']
 
-	def execute(self, cmd: Command):
+	def execute(self, current_user, cmd: Command):
 		"""Execute the command"""
-		if cmd.cmd() in self.permissions:
+		if current_user is None:
+			return "User is not logged in"
+		if self.check_permissions(current_user['type'], cmd.cmd()):
 			return self.map[cmd.cmd()](cmd.target(), cmd.attributes())
 		else:
 			if cmd.cmd() not in self.map.keys():
@@ -605,4 +609,5 @@ class Core:
 		self.init_users()
 		self.init_documents()
 		self.init_id()
+		self.init_admin('')
 		self.permissions = []
