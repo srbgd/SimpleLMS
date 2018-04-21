@@ -52,11 +52,11 @@
 			  <div class="col-sm-9">
 				  <br>
 				  <center>
-				  <h3>Simple Library Managment System</h3>
+				  <h1>Simple Library</h1>
 					  {% if search_form %}
 						<form method=post>
 						  <dl>
-							  {{search_form.search(size=48)}}
+								{{search_form.search(size=72)}}
 							   {% if search_form.search.errors %}
 									<ul class=errors>
 									{% for error in field.errors %}
@@ -73,10 +73,6 @@
 		<div class="row">
 		  <div class="col-sm-2">
 		  <br>
-
-		  <br>
-		   <!-- Great, til you resize. -->
-			<!--<div class="well bs-sidebar affix" id="sidebar" style="background-color:#fff">-->
 			  <div>
     </div>
 			<div class="well bs-sidebar" id="sidebar" style="background-color:#fff; width:%" >
@@ -86,7 +82,7 @@
 				  {% if user %}
 				  <li class="nav-item"><a class="nav-link" href="{{ url_for('user', user_id=user.id) }}">{{user.attributes.name}}</a></li>
 
-				  		{% if user.type == "librarian" %}
+				  		{% if can_modify == True %}
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('add_documents') }}">Add document</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('users') }}">Users</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('checked_out') }}"> Checked out</a></li>
@@ -94,7 +90,6 @@
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('registration_requests') }}"> Unconfirmed users</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('documents_requests') }}"> Documents requests</a></li>
 				  			<li class="nav-item"><a class="nav-link" href="{{ url_for('all_notifications') }}"> All notifications</a></li>
-				  			<!--<li class="nav-item"><a class="nav-link" href="{{ url_for('run_routines') }}"> Run routines</a></li>-->
 				  		{% endif %}
 				  <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
 				  {% else %}

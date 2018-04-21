@@ -24,6 +24,10 @@ class Core:
 	"""List of all users who must checkout a document today"""
 	admin = None
 
+	def search(self, s):
+		return list(filter(lambda d: any(', '.join(i.__str__() for i in list(d.values())).lower().find(i) != -1 for i in s.lower().split()),
+						   self.find_all_documents()))
+
 	def add(self, target, attributes):
 		"""Add new item to database"""
 		self.db.add({
@@ -240,7 +244,7 @@ class Core:
 		if user:
 			self.permissions = self.get_permissions(user[0])
 			self.normalize_request_list()
-			return user[0]
+			return user[0]['id']  # Warning, I needed user_id
 		else:
 			return False
 
@@ -545,8 +549,8 @@ class Core:
 		return True
 
 	def init_admin(self, password):
-		self.insert('admin', {'login': 'admin', 'password': password})
-		self.admin = self.find('admin')[0]
+		# self.register('admin', {'login': 'admin', 'password': password})
+		self.admin = self.find('admin', {})[0]
 
 	def init_db(self, mode):
 		"""Initialize database"""

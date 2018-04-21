@@ -7,22 +7,32 @@
     {% endfor %}
 
 
-    {% if user.type == "librarian" %}
+    {% if can_modify == True %}
         <h5> <a href=" {{url_for('edit_document', doc_id = document.id)}}">Edit</a></h5>
+    {% elif can_delete %}
         <h5> <a href=" {{url_for('delete_document', doc_id = document.id)}}">Delete</a></h5>
-
     {% endif %}
+
     {% if document.type != "reference_book" %}
         <p> Available copies: {{available_copies}}</p>
-        {% if user.type == "librarian" %}
+        {% if can_modify == True %}
              {% if available_copies > 0%}
                 <p><a href="{{url_for('delete_copy', origin_id=document.id)}}">Delete 1 copy</a></p>
                 <p><a href="{{url_for('delete_copies', origin_id=document.id)}}">Delete all copies</a></p>
             {% endif %}
             {% if is_outstanding_request == False %}
-                <p><a href="{{url_for('outstanding_request_on', doc_id=document.id)}}"> Place an outstanding request for a document</a></p>
+                <p>No outstanding request</p>
             {% else %}
-                <p><a href="{{url_for('outstanding_request_off', doc_id=document.id)}}"> Take off outstanding request</a></p>
+                 <p>Outstanding request is placed</p>
+            {% endif %}
+
+
+            {% if can_place_outstanding_request == True %}
+                {% if is_outstanding_request == False %}
+                    <p><a href="{{url_for('outstanding_request_on', doc_id=document.id)}}"> Place an outstanding request for a document</a></p>
+                {% else %}
+                    <p><a href="{{url_for('outstanding_request_off', doc_id=document.id)}}"> Take off outstanding request</a></p>
+                {% endif %}
             {% endif %}
 
             <h5> Users: </h5>
@@ -38,7 +48,8 @@
                 Type: {{names_and_types[loop.index0][1]}}
             {%endfor%}
         {% endif %}
-        {% if user and user.type != "librarian"%}
+
+        {% if user and can_modify == False%}
             {% if checked %}
                 {% if requested_to_return %}
                     You requested to return

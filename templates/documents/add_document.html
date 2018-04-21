@@ -23,7 +23,7 @@
                     <span style="color: red;">[{{ error }}]</span>
                 {% endfor %} </p>
             {% endfor %}
-        {%if user.type == "librarian" and add_copies%}
+        {%if can_add == True and add_copies%}
         <p>{{add_copies.number.label}}</p>
         <p>{{add_copies.number}}</p>
         {%endif%}

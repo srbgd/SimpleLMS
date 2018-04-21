@@ -1,17 +1,17 @@
 [
   {
     "type": "faculty",
-    "permissions": ["find", "checkout", "return", "checkout-request"],
+    "permissions": ["find", "check_out", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
     "type": "student",
-    "permissions": ["find", "checkout", "return", "checkout-request"],
+    "permissions": ["find", "check_out", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
     "type": "visiting-professor",
-    "permissions": ["find", "checkout", "return", "checkout-request"],
+    "permissions": ["find", "check_out", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
@@ -34,4 +34,9 @@
     "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy", "approve", "decline"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
+  {
+    "type": "admin",
+    "permissions": [],
+    "attributes": ["login", "password"]
+  }
 ]

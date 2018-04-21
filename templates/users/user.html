@@ -8,12 +8,21 @@
     <div><h5> Address: <b>{{ a_user.attributes.address}}</b></h5></div>
     <div><h5> id: <b>{{ a_user.id}}</b></h5></div>
     <div><h5> Card number: <b>{{ a_user.attributes["card-number"]}}</b></h5></div>
+    {% if user.type == "admin" and a_user_can_check_out != True %}
     <h5> <a href=" {{url_for('edit_profile', user_id = a_user.id)}}"> Edit</a></h5>
      <h5> <a href=" {{url_for('change_password', user_id = a_user.id)}}"> Change password</a></h5>
-    {%if user.type == "librarian"%}
-        <h5> <a href=" {{url_for('delete_user', user_id = a_user.id)}}">Delete</a></h5>
-    {%endif%}
-    {% if a_user.type != "librarian" %}
+    <h5> <a href=" {{url_for('delete_user', user_id = a_user.id)}}">Delete</a></h5>
+    {% elif a_user_can_check_out == True %}
+        <h5> <a href=" {{url_for('edit_profile', user_id = a_user.id)}}"> Edit</a></h5>
+        {%if can_check_out == True %}
+        <h5> <a href=" {{url_for('change_password', user_id = a_user.id)}}"> Change password</a></h5>
+        {% endif %}
+        {%if can_delete == True%}
+            <h5> <a href=" {{url_for('delete_user', user_id = a_user.id)}}"> Delete</a></h5>
+        {%endif%}
+
+
+
         <h5>Holding Documents:</h5>
         {% if documents %}
             {% for name in documents %}
