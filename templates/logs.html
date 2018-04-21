@@ -1,0 +1,20 @@
+{% extends "basic.html" %}
+
+{% block content %}
+<div class="well bs-sidebar" id="sidebar" style="background-color:#fff">
+        <h5 style="margin-left:15px">Found: {{notifications|length}}.  <a href="{{url_for('delete_all_logs')}}"> Delete all logs</a></h5>
+
+    <ul>
+    {% for log in logs%}
+            <p> By <a href="{{url_for('user', user_id=log.attributes.user_id)}}">{{log.attributes.user_id}} </a> |
+                action: {{log.attributes.action}} |
+                target id: {{log.attributes.target_id}} |
+                <!-- target: <a href="{{url_for('user', user_id=log.attributes.target_id)}}">{{log.attributes.target_id}}</a>.-->
+                {{log.attributes.comment}}.
+            </p>
+    {% endfor %}
+        </ul>
+    </div>
+
+
+{% endblock %}

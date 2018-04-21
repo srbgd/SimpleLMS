@@ -47,7 +47,7 @@ class DataBase:
 		"""Delete item from database"""
 		return self.shelf.delete_many({"id": some_id}).deleted_count != 0
 
-	def delete_one(self, items):
+	def delete_many(self, items):
 		self.shelf.delete_one(items)
 
 	def modify_and_change_type(self, some_id, attributes, type):

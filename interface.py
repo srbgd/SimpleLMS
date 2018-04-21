@@ -26,7 +26,6 @@ def login_required(func):
 		else:
 			flash("Please log in")
 		return redirect(url_for('login'))
-
 	return wrapper
 
 
@@ -44,7 +43,8 @@ def can_do_a_thing_wrapper(thing):
 
 
 def can_do_a_thing_to_cookie(user_id, thing):
-	print(core.find_by_id(user_id)['type'], thing, core.check_permissions(core.find_by_id(user_id)['type'], thing))
+	print(core.find_by_id(user_id)['type'], thing)
+	print(core.check_permissions(core.find_by_id(user_id)['type'], thing))
 	if core.check_permissions(core.find_by_id(user_id)['type'], thing):
 		return "1"
 	else:
@@ -55,7 +55,6 @@ def can_modify_wrapper(func):
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('modify')
 		return func(*args, **kwargs) if can_do is True else can_do
-
 	return wrapper
 
 
@@ -64,7 +63,6 @@ def can_add_wrapper(func):
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('insert')
 		return func(*args, **kwargs) if can_do is True else can_do
-
 	return wrapper
 
 
@@ -73,7 +71,6 @@ def can_delete_wrapper(func):
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('delete')
 		return func(*args, **kwargs) if can_do is True else can_do
-
 	return wrapper
 
 
@@ -82,7 +79,6 @@ def can_place_outstanding_request_wrapper(func):
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('outstanding-request')
 		return func(*args, **kwargs) if can_do is True else can_do
-
 	return wrapper
 
 
@@ -95,7 +91,6 @@ def can_edit_user_page_wrapper(func):
 			return func(user_id)
 		else:
 			return can_do
-
 	return wrapper
 
 
@@ -109,6 +104,16 @@ def can_check_out_wrapper(func):
 			return can_do
 	return wrapper
 
+
+def admin_required(func):
+	@wraps(func)
+	def wrapper(*args, **kwargs):
+		user = get_current_user()
+		if user['type'] == 'admin':
+			return func(*args, **kwargs)
+		else:
+			return redirect(url_for("sorry"))
+	return wrapper
 
 def can_do(thing):
 	return True if request.cookies.get(thing) == "1" else False
@@ -211,7 +216,7 @@ def return_document(copy_id):
 def document(doc_id):
 	"""rendering document page with id=doc_id"""
 	document = core.find_by_id(doc_id)
-	if document["type"] != "student" and document["type"] != "faculty" and document["type"] != "librarian":
+	if not core.check_user_type(document['type']):
 		copies = core.find("copy", {"origin_id": doc_id})
 		available_copies = 0
 
@@ -275,6 +280,7 @@ def user_requested_to_check_out(doc_id):
 def delete_copy(origin_id):
 	"""Delete 1 copy of a document"""
 	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})
+	core.log(get_current_user_id(),"delete n copies", origin_id, "n=1")
 	return redirect(url_for("document", doc_id=origin_id))
 
 
@@ -284,6 +290,7 @@ def delete_copies(origin_id):
 	"""Delete all available copies of a document"""
 	if can_modify_wrapper():
 		core.delete_available_copies(origin_id)
+		core.log(get_current_user_id(), "delete n copies", origin_id, "n=all available")
 		return redirect(url_for("document", doc_id=origin_id))
 	else:
 		return redirect(url_for("sorry"))
@@ -370,6 +377,8 @@ def edit_document(doc_id):
 			core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
 		except Exception:
 			core.modify(doc_id, new_attributes)
+		print("here")
+		core.log(get_current_user_id(), "modify a document", doc_id)
 		if add_copies:
 			add_n_copies(doc_id, add_copies.number.data)
 		return redirect(url_for("document", doc_id=doc_id))
@@ -377,7 +386,7 @@ def edit_document(doc_id):
 		old_attributes = core.find_by_id(doc_id)['attributes']
 		for attribute in attributes:
 			form[attribute].data = old_attributes[attribute]
-	return render_template("documents/add_document.html", form=form, attributes=attributes, user=get_current_user_id(),
+	return render_template("documents/add_document.html", form=form, attributes=attributes, user=get_current_user(),
 						   can_add=can_add(), add_copies=add_copies,
 						   can_modify=can_modify())
 
@@ -387,6 +396,7 @@ def edit_document(doc_id):
 def delete_document(doc_id):
 	"""rendering removing documents"""
 	if core.delete_book(doc_id):
+		core.log(get_current_user_id(), "delete a document", doc_id)
 		return redirect(url_for("documents"))
 	else:
 		flash("Failed to delete document with doc_id={}, document has held copies".format(doc_id))
@@ -453,7 +463,8 @@ def add_document(action_id):
 				new_attributes[attribute] = form[attribute].data
 			if add_copies:
 				n = add_copies.number.data if add_copies.number.data is not None else 0
-				core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
+				doc_id = core.add_document_with_copies(target=target, attributes=new_attributes, n=n)
+				core.log(get_current_user_id(), 'add a document', doc_id)
 			else:
 				core.add(target=target, attributes=new_attributes)
 			return redirect(url_for('add_documents'))
@@ -473,6 +484,7 @@ def delete_user(user_id):
 		flash("Failed to delete user with id {}. He has documents to return".format(user_id))
 		return redirect(url_for("user", user_id=user_id))
 	core.db.delete(user_id)
+	core.log(get_current_user_id(), "delete a user", user_id)
 	return redirect(url_for("users"))
 
 
@@ -497,6 +509,7 @@ def login():
 def get_set_of_permissions_in_cookie():
 	return ["modify", "insert", "delete", "check_out"]
 
+
 @app.route('/user/<int:user_id>')
 @can_edit_user_page_wrapper
 def user(user_id):
@@ -505,13 +518,11 @@ def user(user_id):
 	documents_names = user_documents_names(copies)
 	(overdues_and_fines, total_fine) = overdue_days_and_fines(copies)
 	notifications = core.get_notifications(user_id)
-	print("can_delete", can_delete())
-	# print(True if can_do_a_thing_to_cookie(user_id, "check_out") == "1" else False)
 	return render_template("users/user.html", user=get_current_user(), a_user=core.find_by_id(user_id), copies=copies,
 						   documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine,
 						   notifications=notifications, can_delete=can_delete(),
 						   a_user_can_check_out=True if can_do_a_thing_to_cookie(user_id, "check_out") == "1" else False,
-						   can_modify=can_modify(), can_check_out=can_check_out())
+						   can_modify=can_modify(), can_change_password=user_id == get_current_user_id())
 
 
 def get_copies(user_id):
@@ -539,17 +550,18 @@ def user_free():
 def edit_profile(user_id):
 	"""rendering editing profile page"""
 	form = EditProfileForm(request.form)
-	approve_form = SelectForm(request.form)
+	select_type_form = SelectForm(request.form)  # Select new type of a user
 	user = core.find_by_id(user_id)
 	if form.validate_on_submit():
-		if approve_form.type.data == "None":
+		if select_type_form.type.data == "None":
 			new_type = user['type']
 		else:
-			new_type = approve_form.type.data
+			new_type = select_type_form.type.data
 		attributes = {"login": form.login.data, "name": form.name.data,
 					  "address": form.address.data, "phone-number": form.phone_number.data,
 					  "card-number": form.card_number.data}
 		core.modify(id=user_id, attributes=attributes, new_type=new_type)
+		core.log(get_current_user_id(), "modify a user", user_id)
 		flash('Your changes have been saved.')
 		return redirect(url_for('user', user_id=user_id))
 	elif request.method == 'GET':
@@ -559,9 +571,9 @@ def edit_profile(user_id):
 		form.phone_number.data = user['attributes']['phone-number']
 		form.card_number.data = user['attributes']['card-number']
 		if "modify" not in core.get_permissions(get_current_user()):
-			approve_form = None
+			select_type_form = None
 	return render_template('users/edit_profile.html', title='Edit Profile',
-						   form=form, user=user, approve_form=approve_form,
+						   form=form, user=user, approve_form=select_type_form,
 						   can_modify=can_modify())
 
 
@@ -573,6 +585,7 @@ def change_password(user_id):
 	if form.validate_on_submit():
 		attributes = {"password": form.password.data}
 		core.modify(user_id, attributes)
+		core.log(get_current_user_id(), "modify a user", user_id, "change password")
 		flash('Your changes have been saved.')
 		return redirect(url_for('user', user_id=user_id))
 	return render_template('users/change_password.html', title='Edit Profile',
@@ -619,25 +632,31 @@ def register():
 
 @app.route('/registration_requests', methods=["GET", "POST"])
 @can_add_wrapper
-def registration_requests():
+def registration_requests():  # TODO: Get rid of  buttons
 	"""For librarian to assign a user's status"""
 	users = core.get_all_unconfirmed_users()
 	forms = [ApproveForm(request.form) for i in range(len(users))]
 	for i in range(len(forms)):
-		if forms[i].validate_on_submit():
+		if forms[i].validate_on_submit():  # no librarians
 			if forms[i].student.data:
-				core.modify(id=users[i]['id'], new_type="student")
+				new_type = "student"
 			elif forms[i].faculty.data:
-				core.modify(id=users[i]['id'], new_type="faculty")
-			elif forms[i].librarian.data:
-				core.modify(id=users[i]['id'], new_type="librarian")
+				new_type = "faculty"
 			elif forms[i].visiting_professor.data:
-				core.modify(id=users[i]['id'], new_type="visiting-professor")
+				new_type = "visiting-professor"
 			elif forms[i].decline.data:
 				core.delete(id=users[i]['id'])
+			core.modify(id=users[i]['id'], new_type=new_type)
+			core.log(get_current_user_id(), "accept registration", users[i]['id'], new_type)
 			return redirect(url_for("registration_requests"))
 	return render_template("users/registration_requests.html", user=get_current_user(), users=users, forms=forms,
 						   can_modify=can_modify())
+
+
+# @app.route('/approve_registration_request/<int:user_id>')
+# @can_add
+# def approve_registration_request(user_id):
+# 	core.modify(id=users[i]['id'], new_type=)
 
 
 def get_users(requests):
@@ -741,6 +760,20 @@ def all_notifications():
 	notifications = core.get_all_notifications()
 	return render_template("users/all_notifications.html", notifications=notifications, user=get_current_user(),
 						   can_modify=can_modify())
+
+
+@app.route('/logs')
+@admin_required
+def logs():
+	logs = core.get_sorted_logs()
+	return render_template("logs.html", logs=logs, user=get_current_user(), can_modify=can_modify())
+
+
+@app.route('/delete_all_logs')
+@admin_required
+def delete_all_logs():
+	core.delete_all_logs()
+	return redirect(url_for("logs"))
 
 
 @app.route('/delete_all_notifications')

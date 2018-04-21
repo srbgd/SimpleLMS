@@ -6,7 +6,7 @@
 
     <ul>
     {% for notification in notifications%}
-          <p> {{notification.attributes.message}}</li> <a href="{{ url_for('user', user_id=notification.attributes.user_id)}}"> User {{notification.attributes.user_id}}</a> </p>
+          <p> {{notification.attributes.message}}, date: {{notification.attributes.date}}</li> <a href="{{ url_for('user', user_id=notification.attributes.user_id)}}"> User {{notification.attributes.user_id}}</a> </p>
     {% endfor %}
         </ul>
     </div>

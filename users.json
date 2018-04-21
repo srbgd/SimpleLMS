@@ -5,7 +5,7 @@
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
-    "type": "student",
+    "type": "student",  
     "permissions": ["find", "check_out", "return", "checkout-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
