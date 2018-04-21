@@ -25,11 +25,14 @@ class Core:
 	admin = None
 
 	def search(self, s):
-		return list(filter(lambda d: any(', '.join(i.__str__() for i in list(d.values())).lower().find(i) != -1 for i in s.lower().split()),
-						   self.find_all_documents()))
+		return list(filter(lambda d: any(map(lambda i: str().join(map(lambda x: x.__str__(), d.values())).lower().find(i) != -1, s.lower().split())), self.find_all_documents()))
+
+	def log(self, text):
+		self.insert('log', {'text': text, 'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
+		self.db.add({
 		self.db.add({
 			'id': self.id,
 			'type': target,
@@ -56,7 +59,7 @@ class Core:
 
 	def find(self, type, attributes):
 		"""Find item in database"""
-		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request', 'renew', 'notification', 'outstanding-request']:
+		if self.check_document_type(type) or self.check_user_type(type) or type in ['', 'copy', 'request', 'renew', 'notification', 'outstanding-request', 'log']:
 			return self.db.lookup(type, attributes)
 		else:
 			return None
@@ -446,6 +449,9 @@ class Core:
 		"""Check if an outstanding request is placed on the document"""
 		return self.find('outstanding-request', {'target_id': doc_id}) != []
 
+	def get_sorted_logs(self):
+		return list(reversed((sorted(self.find('log', {}), key = lambda x: datetime.datetime.strptime(x['attributes']['time'], '[%d/%m/%y-%H:%M:%S]')))))
+
 	@staticmethod
 	def sort_notifications(notifications):
 		"""Sort notification in chronological order"""
@@ -549,8 +555,12 @@ class Core:
 		return True
 
 	def init_admin(self, password):
-		# self.register('admin', {'login': 'admin', 'password': password})
-		self.admin = self.find('admin', {})[0]
+		self.admin = self.find('admin', {})
+		if self.admin:
+			self.admin = self.admin[0]
+		else:
+			self.register('admin', {'login': 'admin', 'password': password})
+			self.admin = self.find('admin', {})[0]
 
 	def init_db(self, mode):
 		"""Initialize database"""
