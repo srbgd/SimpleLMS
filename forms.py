@@ -29,7 +29,7 @@ class AddCopies(FlaskForm):
 
 
 class SearchForm(FlaskForm):
-    select = SelectField('By', choices=[('-','-'),('title', 'title'), ('author', 'author')])
+    # select = SelectField('By', choices=[('-','-'),('title', 'title'), ('author', 'author')])
     search = StringField('Search')
 
 

@@ -46,9 +46,9 @@ def can_do_a_thing_wrapper(thing):
 def can_do_a_thing_to_cookie(user_id, thing):
 	print(core.find_by_id(user_id)['type'], thing, core.check_permissions(core.find_by_id(user_id)['type'], thing))
 	if core.check_permissions(core.find_by_id(user_id)['type'], thing):
-		return 1
+		return "1"
 	else:
-		return 0
+		return "0"
 
 def can_modify_wrapper(func):
 	@wraps(func)
@@ -130,15 +130,30 @@ def can_check_out():
 	return can_do("can_check_out")
 
 
-@app.route('/')
+@app.route('/', methods=['POST', 'GET'])
 @app.route('/documents', methods=['POST', 'GET'])
 @login_required
 def documents():
 	"""rendering documents (main page)"""
-	search_form = SearchForm()
-	if search_form.validate_on_submit():
-		return search_results(search_form)
-	return render_template('documents/documents.html', documents=core.find_all_documents(), user=get_current_user(), can_modify=can_modify())
+	search_form = SearchForm(request.form)
+	print("ah?")
+	if request.method == "POST":
+		# print("yep")
+		return search_results(search_form.search.data)
+	return render_template('documents/documents.html', documents=core.find_all_documents(), user=get_current_user(), can_modify=can_modify(), search_form=search_form)
+
+
+@app.route('/results', methods=['POST', 'GET'])
+def search_results(search_string):
+	"""search for given string "search" """
+	search_form = SearchForm(request.form)
+	results = core.search(search_string)
+	print("results", results, not results)
+	if results is []:
+		flash('No results found!')
+		return redirect('/')
+	else:
+		return render_template('documents/results.html', documents=results, user=get_current_user(), can_modify=can_modify(), search_form=search_form)
 
 
 def get_current_user():
@@ -171,18 +186,6 @@ def users():
 def overdue_users():
 	"""For librarian to get users with overdue"""
 	return render_template("users/users.html", users=core.get_all_users_with_overdue(), user=get_current_user(), can_modify=can_modify())
-
-
-@app.route('/results')
-def search_results(search):
-	"""search for given string "search" """
-	search_string = search.data['search']
-	results = core.search(search_string)
-	if not results:
-		flash('No results found!')
-		return redirect('/')
-	else:
-		return render_template('results.html', results=results, user=get_current_user(), can_modify=can_modify())
 
 
 def add_n_copies(origin_id, n):
@@ -344,19 +347,19 @@ def user_checked(doc_id):
 def edit_document(doc_id):
 	"""editing documents page with id=doc_id"""
 	document = core.find_by_id(doc_id)
-	add_copies = AddCopies()
+	add_copies = AddCopies(request.form)
 	if document['type'] == "book" or document['type'] == "best_seller":
-		form = AddBookForm()
+		form = AddBookForm(request.form)
 		attributes = doc_attributes[0]["attributes"]
 	elif document['type'] == "reference_book":
-		form = AddReferenceBookForm()
+		form = AddReferenceBookForm(request.form)
 		attributes = doc_attributes[1]["attributes"]
 		add_copies = None
 	elif document['type'] == "journal_article":
-		form = AddJournalForm()
+		form = AddJournalForm(request.form)
 		attributes = doc_attributes[3]["attributes"]
 	else:
-		form = AddAVForm()
+		form = AddAVForm(request.form)
 		attributes = doc_attributes[4]["attributes"]
 	if form.validate_on_submit():
 		flash('Edited document {}'.format(form.title))
@@ -424,23 +427,23 @@ def add_document(action_id):
 	if action_id > 0 and action_id < 5:
 		add_copies = AddCopies()
 		if action_id == 1:
-			form = AddBookForm()
+			form = AddBookForm(request.form)
 			if form['is_best_seller'].data == 'best_seller':
 				target = 'best_seller'
 			else:
 				target = 'book'
 			attributes = doc_attributes[0]["attributes"]
 		elif action_id == 2:
-			form = AddReferenceBookForm()
+			form = AddReferenceBookForm(request.form)
 			attributes = doc_attributes[1]["attributes"]
 			target = 'reference_book'
 			add_copies = None
 		elif action_id == 3:
-			form = AddJournalForm()
+			form = AddJournalForm(request.form)
 			attributes = doc_attributes[3]["attributes"]
 			target = 'journal_article'
 		else:
-			form = AddAVForm()
+			form = AddAVForm(request.form)
 			attributes = doc_attributes[4]["attributes"]
 			target = 'audio_video'
 		if form.validate_on_submit():
@@ -476,7 +479,7 @@ def delete_user(user_id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	"""rendering login"""
-	form = LoginForm()
+	form = LoginForm(request.form)
 	if form.validate_on_submit():
 		user_id = core.login(form.login.data, form.password.data)
 		if user_id is not False:
@@ -486,7 +489,7 @@ def login():
 			resp = make_response(redirect(url_for('documents')))
 			permissions = get_set_of_permissions_in_cookie()
 			for permission in permissions:
-				resp.set_cookie("can_" + permission, "1" if can_do_a_thing_to_cookie(user_id, permission) else "0")
+				resp.set_cookie("can_" + permission, can_do_a_thing_to_cookie(user_id, permission))
 			return resp
 	return render_template('users/login.html', title='Sign In', form=form, can_modify=can_modify())
 
@@ -502,10 +505,13 @@ def user(user_id):
 	documents_names = user_documents_names(copies)
 	(overdues_and_fines, total_fine) = overdue_days_and_fines(copies)
 	notifications = core.get_notifications(user_id)
+	print("can_delete", can_delete())
+	# print(True if can_do_a_thing_to_cookie(user_id, "check_out") == "1" else False)
 	return render_template("users/user.html", user=get_current_user(), a_user=core.find_by_id(user_id), copies=copies,
 						   documents=documents_names, overdues_and_fines=overdues_and_fines, total_fine=total_fine,
 						   notifications=notifications, can_delete=can_delete(),
-						   can_check_out_a_user=True if can_do_a_thing_to_cookie(user_id, "check_out") == "1" else False, can_modify=can_modify())  # WARNING: using core in can do
+						   a_user_can_check_out=True if can_do_a_thing_to_cookie(user_id, "check_out") == "1" else False,
+						   can_modify=can_modify(), can_check_out=can_check_out())
 
 
 def get_copies(user_id):
@@ -532,7 +538,7 @@ def user_free():
 @can_edit_user_page_wrapper
 def edit_profile(user_id):
 	"""rendering editing profile page"""
-	form = EditProfileForm()
+	form = EditProfileForm(request.form)
 	approve_form = SelectForm(request.form)
 	user = core.find_by_id(user_id)
 	if form.validate_on_submit():
@@ -563,7 +569,7 @@ def edit_profile(user_id):
 @can_edit_user_page_wrapper
 def change_password(user_id):
 	"""rendering change password"""
-	form = ChangePasswordForm()
+	form = ChangePasswordForm(request.form)
 	if form.validate_on_submit():
 		attributes = {"password": form.password.data}
 		core.modify(user_id, attributes)

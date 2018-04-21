@@ -24,6 +24,10 @@ class Core:
 	"""List of all users who must checkout a document today"""
 	admin = None
 
+	def search(self, s):
+		return list(filter(lambda d: any(', '.join(i.__str__() for i in list(d.values())).lower().find(i) != -1 for i in s.lower().split()),
+						   self.find_all_documents()))
+
 	def add(self, target, attributes):
 		"""Add new item to database"""
 		self.db.add({
@@ -545,7 +549,7 @@ class Core:
 		return True
 
 	def init_admin(self, password):
-		self.register('admin', {'login': 'admin', 'password': password})
+		# self.register('admin', {'login': 'admin', 'password': password})
 		self.admin = self.find('admin', {})[0]
 
 	def init_db(self, mode):
