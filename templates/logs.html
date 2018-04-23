@@ -2,19 +2,26 @@
 
 {% block content %}
 <div class="well bs-sidebar" id="sidebar" style="background-color:#fff">
-        <h5 style="margin-left:15px">Found: {{notifications|length}}.  <a href="{{url_for('delete_all_logs')}}"> Delete all logs</a></h5>
+        <h5 style="margin-left:15px">Found: {{logs|length}}.  <a href="{{url_for('delete_all_logs')}}"> Delete all logs</a></h5>
 
-    <ul>
+    <table>
+        <tr class="nav-item" style="margin-left:15px; border: 1.5px solid rgb(100,100,100)">
+            <th><span style="margin-right: 120px"> When </span></th>
+            <th><span style="margin-right: 30px"> Who </span></th>
+            <th><span style="margin-right: 150px"> What </span></th>
+            <th><span style="margin-right: 30px"> Target </span></th>
+            <th> Comment </th>
+        </tr>
     {% for log in logs%}
-            <p> By <a href="{{url_for('user', user_id=log.attributes.user_id)}}">{{log.attributes.user_id}} </a> |
-                action: {{log.attributes.action}} |
-                target id: {{log.attributes.target_id}} |
-                <!-- target: <a href="{{url_for('user', user_id=log.attributes.target_id)}}">{{log.attributes.target_id}}</a>.-->
-                {{log.attributes.comment}}.
-            </p>
+            <tr>
+                <td> {{log.attributes.time}}</td>
+                <td><a href="{{url_for('user', user_id=log.attributes.user_id)}}">{{log.attributes.user_id}} </a></td>
+                <td> {{log.attributes.action}}</td>
+                <td> {{log.attributes.target_id}}</td>
+                <td> {{log.attributes.comment}} </td>
+            </tr>
     {% endfor %}
-        </ul>
+    </table>
+
     </div>
-
-
 {% endblock %}

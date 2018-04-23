@@ -33,7 +33,7 @@ def can_do_a_thing_wrapper(thing):
 	user_id = session.get('user_id')
 	print(thing, can_do("can_" + thing))
 	if user_id is not None:
-		if can_do("can_" + thing):  # cookies are on
+		if can_do("can_" + thing) or core.check_permissions(get_current_user()['type'], thing):  # cookies are on
 			return True
 		else:
 			return redirect(url_for("sorry"))
@@ -49,6 +49,7 @@ def can_do_a_thing_to_cookie(user_id, thing):
 		return "1"
 	else:
 		return "0"
+
 
 def can_modify_wrapper(func):
 	@wraps(func)
@@ -115,6 +116,7 @@ def admin_required(func):
 			return redirect(url_for("sorry"))
 	return wrapper
 
+
 def can_do(thing):
 	return True if request.cookies.get(thing) == "1" else False
 
@@ -174,6 +176,7 @@ def get_current_user_id():
 def check_out(doc_id):
 	"""check our document with id=doc_id"""
 	if core.check_out(doc_id, dict()):
+		core.log(get_current_user_id(), "check out", doc_id)
 		flash("Checked out document with id {}".format(doc_id))
 	else:
 		flash("Failed to checked out document with id {}".format(doc_id))
@@ -235,13 +238,13 @@ def document(doc_id):
 		priority_queue = core.get_queue(doc_id)
 		names_and_types = get_names_and_types_from_queue(priority_queue)
 		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=get_current_user(),
-							   can_modify=can_modify(),
+							   can_modify=can_modify(), can_delete=can_delete(),
 							   available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
 							   names=names, overdue_days=overdue_days(held_copies), requested=user_requested_to_check_out(doc_id),
 							   requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
 							   overdue=get_overdue(copy_id), can_renew=core.can_renew(doc_id, get_current_user()),
-							   priority_queue=priority_queue,
-							   names_and_types=names_and_types, can_place_outstanding_request = core.check_permissions(get_current_user()["type"], "outstanding-request"),
+							   priority_queue=priority_queue, names_and_types=names_and_types,
+							   can_place_outstanding_request = core.check_permissions(get_current_user()["type"], "outstanding-request"),  # TODO not working
 							   is_outstanding_request=core.placed_outstanding_request(doc_id))
 	else:
 		return redirect(url_for('sorry'))
@@ -279,7 +282,7 @@ def user_requested_to_check_out(doc_id):
 @can_modify_wrapper
 def delete_copy(origin_id):
 	"""Delete 1 copy of a document"""
-	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})
+	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})  # delete_one?
 	core.log(get_current_user_id(),"delete n copies", origin_id, "n=1")
 	return redirect(url_for("document", doc_id=origin_id))
 
@@ -377,10 +380,10 @@ def edit_document(doc_id):
 			core.modify(doc_id, new_attributes, new_type=form.is_best_seller.data)
 		except Exception:
 			core.modify(doc_id, new_attributes)
-		print("here")
 		core.log(get_current_user_id(), "modify a document", doc_id)
 		if add_copies:
 			add_n_copies(doc_id, add_copies.number.data)
+			core.log(get_current_user_id(), "add n copies", doc_id, "n="+add_copies.number.data)
 		return redirect(url_for("document", doc_id=doc_id))
 	elif request.method == 'GET':
 		old_attributes = core.find_by_id(doc_id)['attributes']
@@ -470,7 +473,7 @@ def add_document(action_id):
 			return redirect(url_for('add_documents'))
 		return render_template("documents/add_document.html", title='Add document', form=form, attributes=attributes,
 							   user=get_current_user(), add_copies=add_copies,
-							   can_modify=can_modify(), can_delete=can_delete())
+							   can_modify=can_modify(), can_add=can_add())
 	else:
 		return redirect(url_for('sorry'))
 
@@ -547,6 +550,7 @@ def user_free():
 
 @app.route('/edit_profile/<int:user_id>', methods=["POST", "GET"])
 @can_edit_user_page_wrapper
+@admin_required
 def edit_profile(user_id):
 	"""rendering editing profile page"""
 	form = EditProfileForm(request.form)
@@ -570,10 +574,8 @@ def edit_profile(user_id):
 		form.address.data = user['attributes']['address']
 		form.phone_number.data = user['attributes']['phone-number']
 		form.card_number.data = user['attributes']['card-number']
-		if "modify" not in core.get_permissions(get_current_user()):
-			select_type_form = None
 	return render_template('users/edit_profile.html', title='Edit Profile',
-						   form=form, user=user, approve_form=select_type_form,
+						   form=form, user=get_current_user(), approve_form=select_type_form,
 						   can_modify=can_modify())
 
 
@@ -651,12 +653,6 @@ def registration_requests():  # TODO: Get rid of  buttons
 			return redirect(url_for("registration_requests"))
 	return render_template("users/registration_requests.html", user=get_current_user(), users=users, forms=forms,
 						   can_modify=can_modify())
-
-
-# @app.route('/approve_registration_request/<int:user_id>')
-# @can_add
-# def approve_registration_request(user_id):
-# 	core.modify(id=users[i]['id'], new_type=)
 
 
 def get_users(requests):
@@ -744,6 +740,7 @@ def request_return(copy_id):
 @can_place_outstanding_request_wrapper
 def outstanding_request_on(doc_id):
 	core.outstanding_request(doc_id, get_current_user())
+	core.log(get_current_user_id(), "place an outstanding request", doc_id)
 	return redirect(url_for("document", doc_id=doc_id))
 
 
@@ -751,6 +748,7 @@ def outstanding_request_on(doc_id):
 @can_place_outstanding_request_wrapper
 def outstanding_request_off(doc_id):
 	core.delete_outstanding_request(doc_id)
+	core.log(get_current_user_id(), "take off an outstanding request", doc_id)
 	return redirect(url_for("document", doc_id=doc_id))
 
 
