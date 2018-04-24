@@ -143,24 +143,45 @@ def can_check_out():
 def documents():
 	"""rendering documents (main page)"""
 	search_form = SearchForm(request.form)
-	print("ah?")
 	if request.method == "POST":
-		# print("yep")
 		return search_results(search_form.search.data)
-	return render_template('documents/documents.html', documents=core.find_all_documents(), user=get_current_user(), can_modify=can_modify(), search_form=search_form)
+	return render_template('documents/documents.html', documents=core.find_all_documents(), user=get_current_user(),
+						   can_modify=can_modify(), search_form=search_form)
 
 
 @app.route('/results', methods=['POST', 'GET'])
 def search_results(search_string):
 	"""search for given string "search" """
 	search_form = SearchForm(request.form)
-	results = core.search(search_string)
-	print("results", results, not results)
+	if request.form.get('keywords') is not None:
+		where = "keywords"
+	else:
+		where = "title"
+	if request.form.get('and') is not None:
+		how = "AND"
+	else:
+		how = "OR"
+	results = core.search(what=search_string, how=how, where=where)
+	print(search_string, " how: ", how, " where: ", where)
+	print("results", results)
 	if results is []:
 		flash('No results found!')
-		return redirect('/')
+		resp = make_response(redirect('/'))
 	else:
-		return render_template('documents/results.html', documents=results, user=get_current_user(), can_modify=can_modify(), search_form=search_form)
+		resp = make_response(render_template('documents/results.html', documents=results, user=get_current_user(), can_modify=can_modify(), search_form=search_form, where=checked_box('where',where), how=checked_box('how',how)))
+	resp.set_cookie('how', how)
+	resp.set_cookie('where', where)
+	return resp
+
+
+def checked_box(box, box_cookies=None):
+	if box_cookies is None:
+		box_cookies = request.cookies.get(box)
+	if box == 'where':
+		inquiry = 'keywords'
+	else:
+		inquiry = 'AND'
+	return 'checked' if box_cookies == inquiry else ''
 
 
 def get_current_user():
@@ -275,7 +296,7 @@ def user_requested_to_return(copy_id):
 
 def user_requested_to_check_out(doc_id):
 	"""Check if a user requested to check out a document"""
-	return (core.find("request", {"action": "check-out", "target_id": doc_id, "user_id": get_current_user()['id']})) != []
+	return (core.find("request", {"action": "check_out", "target_id": doc_id, "user_id": get_current_user()['id']})) != []
 
 
 @app.route('/delete_copy/<int:origin_id>')
@@ -383,7 +404,8 @@ def edit_document(doc_id):
 		core.log(get_current_user_id(), "modify a document", doc_id)
 		if add_copies:
 			add_n_copies(doc_id, add_copies.number.data)
-			core.log(get_current_user_id(), "add n copies", doc_id, "n="+add_copies.number.data)
+			if add_copies.number.data is not None:
+				core.log(get_current_user_id(), "add n copies", doc_id, "n="+str(add_copies.number.data))
 		return redirect(url_for("document", doc_id=doc_id))
 	elif request.method == 'GET':
 		old_attributes = core.find_by_id(doc_id)['attributes']
@@ -570,7 +592,7 @@ def edit_profile(user_id):
 		return redirect(url_for('user', user_id=user_id))
 	elif request.method == 'GET':
 		form.login.data = user['attributes']['login']
-		form['name'].data = user['attributes']['name']
+		form.name.data = user['attributes']['name']
 		form.address.data = user['attributes']['address']
 		form.phone_number.data = user['attributes']['phone-number']
 		form.card_number.data = user['attributes']['card-number']
@@ -639,17 +661,25 @@ def registration_requests():  # TODO: Get rid of  buttons
 	users = core.get_all_unconfirmed_users()
 	forms = [ApproveForm(request.form) for i in range(len(users))]
 	for i in range(len(forms)):
-		if forms[i].validate_on_submit():  # no librarians
+		if forms[i].validate_on_submit():
 			if forms[i].student.data:
 				new_type = "student"
 			elif forms[i].faculty.data:
 				new_type = "faculty"
 			elif forms[i].visiting_professor.data:
 				new_type = "visiting-professor"
-			elif forms[i].decline.data:
+			elif forms[i].libr1.data:
+				new_type = "librarian-privilege-1"
+			elif forms[i].libr2.data:
+				new_type = "librarian-privilege-2"
+			elif forms[i].libr3.data:
+				new_type = "librarian-privilege-3"
+			if forms[i].decline.data:
 				core.delete(id=users[i]['id'])
-			core.modify(id=users[i]['id'], new_type=new_type)
-			core.log(get_current_user_id(), "accept registration", users[i]['id'], new_type)
+				core.log(get_current_user_id(), "decline registration", users[i]['id'], new_type)
+			else:
+				core.modify(id=users[i]['id'], new_type=new_type)
+				core.log(get_current_user_id(), "accept registration", users[i]['id'], new_type)
 			return redirect(url_for("registration_requests"))
 	return render_template("users/registration_requests.html", user=get_current_user(), users=users, forms=forms,
 						   can_modify=can_modify())
@@ -667,7 +697,7 @@ def get_documents(requests):
 	"""Get documents from request items in database"""
 	documents = []
 	for request in requests:
-		if request['attributes']['action'] == "check-out":
+		if request['attributes']['action'] == "check_out":
 			documents.append(core.find_by_id(request['attributes']['target_id']))
 		else:
 			documents.append(
@@ -694,12 +724,15 @@ def documents_requests():
 @can_modify_wrapper
 def approve_request(req_id):  # TODO: if didn't find req
 	req = core.find_by_id(req_id)
-	if req['attributes']['action'] == "check-out":
+	if req['attributes']['action'] == "check_out":
 		if not core.approve_check_out(req['id'], get_current_user()):
 			flash("failed to approve check out")
+		core.log(get_current_user_id(), 'approve to check out', req['attributes']['target_id'], "of a user with id " + str(req['attributes']['user']))
 	else:
 		if not core.approve_return(req['id'], get_current_user()):
 			flash("failed to approve return")
+		core.log(get_current_user_id(), 'approve to return', req['attributes']['target_id'],
+				 "of a user with id " + str(req['attributes']['user_id']))
 	return redirect(url_for("documents_requests"))
 
 
@@ -707,12 +740,16 @@ def approve_request(req_id):  # TODO: if didn't find req
 @can_modify_wrapper
 def decline_request(req_id):
 	req = core.find_by_id(req_id)
-	if req['attributes']['action'] == "check-out":
+	if req['attributes']['action'] == "check_out":
 		if not core.decline_check_out(req['id'], get_current_user()):
 			flash("failed to decline check out")
+		core.log(get_current_user_id(), 'decline to check out', req['attributes']['target_id'],
+					 "of a user with id " + str(req['attributes']['user_id']))
 	else:
 		if not core.decline_return(req['id'], get_current_user()):
 			flash("failed to decline return")
+		core.log(get_current_user_id(), 'decline to return', req['attributes']['target_id'],
+				 "of a user with id " + str(req['attributes']['user_id']))
 	return redirect(url_for("documents_requests"))
 
 

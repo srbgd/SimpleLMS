@@ -22,8 +22,8 @@ class Core:
 	"""List of all users who must checkout a document today"""
 	admin = None
 
-	def search(self, what, where, how):
-		return list(filter(lambda x: (all if how == 'AND' else any)(map(lambda s: ((lambda i: str().join(map(str, i['attributes'].value()))) if where == str() else (lambda i: i['attributes'][where] if where in i['attributes'].keys() else ''))(x).find(s) != -1, what.split())), self.find_all_documents()))
+	def search(self, what, where="", how=""):
+		return list(filter(lambda x: (all if how == 'AND' else any)(map(lambda s: ((lambda i: str().join(map(str, i['attributes'].value()))) if where == str() else (lambda i: i['attributes'][where] if where in i['attributes'].keys() else ''))(x).lower().find(s) != -1, what.lower().split())), self.find_all_documents()))
 
 	def log(self, user_id, action, target_id, comment=''):
 		self.add('log', {'user_id': user_id, 'action': action, 'target_id': target_id, 'comment': comment, 'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
@@ -266,7 +266,7 @@ class Core:
 
 	def request(self, doc_id, action, current_user):
 		"""Request an action with a document"""
-		if action not in ['check-out', 'return']:
+		if action not in ['check_out', 'return']:
 			return False
 		type, attributes = 'request', {'user_id': current_user['id'], 'target_id': doc_id, 'action': action}
 		if self.find(type, attributes):
@@ -299,7 +299,7 @@ class Core:
 		elif not self.check_permissions(current_user['type'], 'approve'):
 			return False
 		else:
-			if action == 'check-out':
+			if action == 'check_out':
 				result = self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
 				if result:
 					self.delete(request_id)
@@ -345,7 +345,7 @@ class Core:
 
 	def request_check_out(self, doc_id, current_user):
 		"""Request check out a document"""
-		result = self.request(doc_id, 'check-out', current_user)
+		result = self.request(doc_id, 'check_out', current_user)
 		if all(not self.check_available_copy(i) for i in self.find('copy', {'origin_id': doc_id})) and result:
 			message = 'You are added in a queue for the document with id {} because the document is not available right now'
 			self.notify(current_user['id'], message.format(doc_id))
@@ -354,14 +354,14 @@ class Core:
 	def approve_check_out(self, request_id, current_user):
 		"""Approve check out"""
 		request = self.find_by_id(request_id)
-		result = self.approve(request_id, 'check-out', current_user)
+		result = self.approve(request_id, 'check_out', current_user)
 		self.notify_queue(request['attributes']['target_id'])
 		return result
 
 	def decline_check_out(self, request_id, current_user):
 		"""Decline check out"""
 		request = self.find_by_id(request_id)
-		result = self.decline(request_id, 'check-out', current_user)
+		result = self.decline(request_id, 'check_out', current_user)
 		self.notify_queue(request['attributes']['target_id'])
 		return result
 
@@ -384,7 +384,7 @@ class Core:
 	def get_queue(self, id):
 		"""Get queue for current document"""
 		priority = ['student', 'visiting-professor', 'faculty']
-		return sorted(self.find('request', {'target_id': id, 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
+		return sorted(self.find('request', {'target_id': id, 'action': 'check_out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
 
 	@staticmethod
 	def get_duration(user_type, doc_type):

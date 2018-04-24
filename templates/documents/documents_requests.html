@@ -4,15 +4,14 @@
 <div class="well bs-sidebar" id="sidebar" style="background-color:#fff">
     <ul class="nav nav-pills flex-column">
     {% for request in requests%}
-        <li style="margin-left:15px; border: 1.5px solid rgb(100,100,100)"><p class="nav-link" >
-            <p>{{request.attributes.action}}</p>
+        <li style="margin-left:15px; border: 1.5px solid rgb(100,100,100)">
+            <span class="lists"> {{request.attributes.action}}</span>
             <span class="lists"> by {{users[loop.index0].attributes.name}} </span>
-            <span class="lists">document {{documents[loop.index0].attributes.title}}
-                <form action="" method="post">
+            <span class="lists">document {{documents[loop.index0].attributes.title}}</span>
+                <form class ="lists" action="" method="post">
                     <a href="{{url_for('approve_request', req_id = request.id)}}">Approve</a>
                     <a href="{{url_for('decline_request', req_id = request.id)}}">Decline</a>
-            </form></span>
-             </p>
+            </form>
             </li>
     {% endfor %}
     </ul>
