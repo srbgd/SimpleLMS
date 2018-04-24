@@ -6,8 +6,6 @@ import json
 class Core:
 	"""Core class"""
 
-	# current_user = None
-	"""Current user"""
 	permissions = []
 	"""List of command which are allowed to execute for current user"""
 	documents = None
@@ -24,12 +22,11 @@ class Core:
 	"""List of all users who must checkout a document today"""
 	admin = None
 
-	def search(self, s):
-		return list(filter(lambda d: any(map(lambda i: str().join(map(lambda x: x.__str__(), d.values())).lower().find(i) != -1, s.lower().split())), self.find_all_documents()))
+	def search(self, what, where, how):
+		return list(filter(lambda x: (all if how == 'AND' else any)(map(lambda s: ((lambda i: str().join(map(str, i['attributes'].value()))) if where == str() else (lambda i: i['attributes'][where] if where in i['attributes'].keys() else ''))(x).find(s) != -1, what.split())), self.find_all_documents()))
 
 	def log(self, user_id, action, target_id, comment=''):
-		self.add('log', {'user_id': user_id, 'action': action, 'target_id': target_id, 'comment': comment,
-							'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
+		self.add('log', {'user_id': user_id, 'action': action, 'target_id': target_id, 'comment': comment, 'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
@@ -41,7 +38,7 @@ class Core:
 		self.id += 1
 		return self.id - 1
 
-	def register(self, target, attributes):  # interchanged and added default
+	def register(self, target, attributes):
 		"""Add new user to database"""
 		if self.check_user(target, attributes):
 			self.add(target, attributes)
@@ -248,7 +245,7 @@ class Core:
 		if user:
 			self.permissions = self.get_permissions(user[0])
 			self.normalize_request_list()
-			return user[0]['id']  # Warning, I needed user_id
+			return user[0]['id']
 		else:
 			return False
 
@@ -330,6 +327,7 @@ class Core:
 		"""Delete all requests in the queue"""
 		queue = self.get_queue(doc_id)
 		for i in queue:
+			self.log(i['attributes']['user_id'], 'was removed from queue', doc_id)
 			self.delete(i['id'])
 
 	def can_renew(self, id, current_user):
@@ -424,16 +422,18 @@ class Core:
 		if not self.check_document_type(doc['type']):
 			return False
 		queue = self.get_queue(doc_id)
-		message = 'have been removed from the waiting list of the document with id {} because of an outstanding request'
+		message = 'You have been removed from the waiting list of the document with id {} because of an outstanding request'
 		for request in queue:
 			self.notify(request['attributes']['user_id'], message.format(doc_id))
 		self.delete_queue(doc_id)
+		self.log(current_user['id'], 'deleted waiting list', doc_id)
 		message = 'You must immediately return your copy of the document with id {} because of an outstanding request'
 		copies = self.find('copy', {'origin_id': doc_id})
 		for copy in copies:
 			if not self.check_available_copy(copy):
 				self.notify(copy['attributes']['user_id'], message.format(doc_id))
 				self.modify(copy['id'], {'deadline': datetime.datetime.now().strftime('%d/%m/%Y')})
+				self.log(copy['attributes']['user_id'], 'was notified to return', doc_id)
 		self.add('outstanding-request', {'target_id': doc_id})
 		return True
 

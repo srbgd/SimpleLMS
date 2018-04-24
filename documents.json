@@ -1,23 +1,23 @@
 [
   {
     "type": "book",
-    "attributes": ["title", "authors", "publisher", "edition", "date", "price"]
+    "attributes": ["title", "authors", "publisher", "edition", "date", "price", "keywords"]
   },
   {
     "type": "reference_book",
-    "attributes": ["title", "authors", "publisher", "edition", "date"]
+    "attributes": ["title", "authors", "publisher", "edition", "date", "keywords"]
   },
   {
     "type": "best_seller",
-    "attributes": ["title", "authors", "publisher", "edition", "date", "price"]
+    "attributes": ["title", "authors", "publisher", "edition", "date", "price", "keywords"]
   },
   {
     "type": "journal_article",
-    "attributes": ["title", "authors", "journal", "editors", "date", "price"]
+    "attributes": ["title", "authors", "journal", "editors", "date", "price", "keywords"]
   },
   {
     "type": "audio_video",
-    "attributes": ["title", "authors", "price"]
+    "attributes": ["title", "authors", "price", "keywords"]
   }
 ]
 

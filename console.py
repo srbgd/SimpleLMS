@@ -29,7 +29,7 @@ class Interface:
 		password = self.input('Password: ')
 		user = self.core.login(alias, password)
 		if user:
-			self.current_user = user
+			self.current_user = self.core.find_by_id(user)
 			print('Success' + ('' if self.test_mode else '\n'))
 			return True
 		else:
