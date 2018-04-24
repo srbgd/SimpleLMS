@@ -27,12 +27,12 @@ class Core:
 	def search(self, s):
 		return list(filter(lambda d: any(map(lambda i: str().join(map(lambda x: x.__str__(), d.values())).lower().find(i) != -1, s.lower().split())), self.find_all_documents()))
 
-	def log(self, text):
-		self.insert('log', {'text': text, 'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
+	def log(self, user_id, action, target_id, comment=''):
+		self.add('log', {'user_id': user_id, 'action': action, 'target_id': target_id, 'comment': comment,
+							'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
 
 	def add(self, target, attributes):
 		"""Add new item to database"""
-		self.db.add({
 		self.db.add({
 			'id': self.id,
 			'type': target,
@@ -158,6 +158,7 @@ class Core:
 		id = self.add(target, attributes)
 		for i in range(n):
 			self.add_copy(id)
+		return id  # WARNING: CHANGED
 
 	def get_all_checked_out_documents(self):
 		"""Get all documents which have at least one checked out copy"""
@@ -470,6 +471,9 @@ class Core:
 		notifications = self.get_all_notifications()
 		for notification in notifications:
 			self.delete(notification['id'])
+
+	def delete_all_logs(self):
+		self.db.delete_many({"type": "log"})
 
 	def normalize_request_list(self):
 		"""Normalize request list (delete old requests and notify users)"""

@@ -83,7 +83,6 @@ class ChangePasswordForm(FlaskForm):
 
 
 class RegistrationForm(FlaskForm):
-    # type = SelectField('Status', choices=[('faculty', 'Faculty'), ('student','Student'), ('librarian','Librarian')], validators=[DataRequired()])  # TODO: DELETE
     login = StringField('Login', [DataRequired()])
     password = PasswordField('New Password', [
         DataRequired(),
@@ -99,15 +98,15 @@ class RegistrationForm(FlaskForm):
 
 class SelectForm(FlaskForm):
     type = SelectField('Status',
-                       choices=[('unconfirmed', 'Unconfirmed'), ('faculty', 'Faculty'), ('student', 'Student'),
-                                ('librarian', 'Librarian'), ('visiting-professor',"Visiting Professor")])
-    submit = SubmitField('Register', validators=[DataRequired()])
+                       choices=[('unconfirmed', 'Unconfirmed'), ('faculty', 'Faculty'), ('student', 'Student'),('visiting-professor',"Visiting Professor"),
+                                ('librarian-privilege-1', 'Librarian with privilege 1'), ('librarian-privilege-2', 'Librarian with privilege 2'),
+                                ('librarian-privilege-3', 'Librarian with privilege 3')])
+    submit = SubmitField('Save', validators=[DataRequired()])
 
 
 class ApproveForm(FlaskForm):
     student = SubmitField(label="Student")
     faculty = SubmitField(label="Faculty")
-    librarian = SubmitField(label="Librarian")
     visiting_professor = SubmitField(label="Visiting Professor")
     decline = SubmitField(label="Decline")
 
