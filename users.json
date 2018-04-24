@@ -26,12 +26,14 @@
   },
   {
     "type": "librarian-privilege-2",
-    "permissions": ["modify", "register", "insert", "check", "find", "copy", "approve", "decline", "outstanding-request"],
+    "permissions": ["modify", "register", "insert", "check", "find", "copy", "approve", "decline",
+      "outstanding-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
     "type": "librarian-privilege-3",
-    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy", "approve", "decline", "outstanding-request"],
+    "permissions": ["modify", "register", "insert", "delete", "drop", "check", "find", "copy",
+      "approve", "decline", "outstanding-request"],
     "attributes": ["login", "password", "name", "address", "phone-number", "card-number"]
   },
   {
@@ -40,3 +42,4 @@
     "attributes": ["login", "password"]
   }
 ]
+

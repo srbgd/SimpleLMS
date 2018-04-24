@@ -112,8 +112,3 @@ class ApproveForm(FlaskForm):
     libr2 = SubmitField(label="Libr-2")
     libr3 = SubmitField(label="Libr-3")
     decline = SubmitField(label="Decline")
-
-
-class ApproveDocumentForm(FlaskForm):
-    approve = SubmitField(label="Approve")
-    decline = SubmitField(label="Decline")
