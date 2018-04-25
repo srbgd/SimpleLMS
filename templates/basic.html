@@ -56,7 +56,13 @@
 					  {% if search_form %}
 						<form method=post>
 						  <dl>
-								{{search_form.search(size=72)}}
+
+
+									choose and:
+							  <input type="checkbox" name="and" value="title" {{how}}>
+							  		by keywords:
+							  <input type="checkbox" name="keywords" value="keywords" {{where}}>
+							  {{search_form.search(size=72)}}
 							   {% if search_form.search.errors %}
 									<ul class=errors>
 									{% for error in field.errors %}

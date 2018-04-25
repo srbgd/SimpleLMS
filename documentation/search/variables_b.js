@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['remember_5fme',['remember_me',['../classforms_1_1LoginForm.html#af7885f4b54d034d20d08a22ff01767ad',1,'forms::LoginForm']]],
-  ['request_5flist',['request_list',['../classcore_1_1Core.html#aec13bf17e62bb63994b93d815124e572',1,'core::Core']]]
+  ['password',['password',['../classSimpleLMS-master_1_1forms_1_1LoginForm.html#a6539b5e6b45162f0d8cadfea8fafd588',1,'SimpleLMS-master.forms.LoginForm.password()'],['../classSimpleLMS-master_1_1forms_1_1ChangePasswordForm.html#a9ece52d62b64aed568a620581682c7d5',1,'SimpleLMS-master.forms.ChangePasswordForm.password()'],['../classSimpleLMS-master_1_1forms_1_1RegistrationForm.html#a1dff692ecd4f66d6a21acfb8b71368d1',1,'SimpleLMS-master.forms.RegistrationForm.password()']]],
+  ['permissions',['permissions',['../classSimpleLMS-master_1_1core_1_1Core.html#a8c42d4455963f3d25b6d8a9bd30803ea',1,'SimpleLMS-master.core.Core.permissions()'],['../classSimpleLMS-master_1_1core_1_1Core.html#a31e66a53da9fd82ec7de31c451a61853',1,'SimpleLMS-master.core.Core.permissions()']]],
+  ['phone_5fnumber',['phone_number',['../classSimpleLMS-master_1_1forms_1_1EditProfileForm.html#a608e75357f65ec49a1e464e562ef3681',1,'SimpleLMS-master.forms.EditProfileForm.phone_number()'],['../classSimpleLMS-master_1_1forms_1_1RegistrationForm.html#ae429d94ef916c6388bd3891b5ff575e5',1,'SimpleLMS-master.forms.RegistrationForm.phone_number()']]],
+  ['price',['price',['../classSimpleLMS-master_1_1forms_1_1AddBookForm.html#a943b9301373bd4c99b997b37bf91e4c0',1,'SimpleLMS-master.forms.AddBookForm.price()'],['../classSimpleLMS-master_1_1forms_1_1AddJournalForm.html#ae14cdeffc539433636d37df8f8c01959',1,'SimpleLMS-master.forms.AddJournalForm.price()'],['../classSimpleLMS-master_1_1forms_1_1AddAVForm.html#a895ff75b61dfd3a0207a07a7c6900013',1,'SimpleLMS-master.forms.AddAVForm.price()']]],
+  ['publisher',['publisher',['../classSimpleLMS-master_1_1forms_1_1AddBookForm.html#a4c6a8c55ce8882bf510dea7be049e35b',1,'SimpleLMS-master.forms.AddBookForm.publisher()'],['../classSimpleLMS-master_1_1forms_1_1AddReferenceBookForm.html#a8ea793d4764b10948dc84658c305f98c',1,'SimpleLMS-master.forms.AddReferenceBookForm.publisher()']]]
 ];

@@ -29,7 +29,6 @@ class AddCopies(FlaskForm):
 
 
 class SearchForm(FlaskForm):
-    # select = SelectField('By', choices=[('-','-'),('title', 'title'), ('author', 'author')])
     search = StringField('Search')
 
 
@@ -41,7 +40,7 @@ class AddBookForm(FlaskForm):
     date = StringField('Date', validators=[DataRequired()])
     is_best_seller = SelectField('Is bestseller', choices=[('best_seller', 'Yes'), ('book','No')], validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
-    # copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
+    keywords = StringField('Keywords')
     submit = SubmitField('Submit')
 
 
@@ -51,6 +50,7 @@ class AddReferenceBookForm(FlaskForm):
     publisher = StringField('Publisher', validators=[DataRequired()])
     edition = StringField('Edition', validators=[DataRequired()])
     date = StringField('Date', validators=[DataRequired()])
+    keywords = StringField('Keywords')
     submit = SubmitField('Submit')
 
 
@@ -61,7 +61,7 @@ class AddJournalForm(FlaskForm):
     editors = StringField('Edition', validators=[DataRequired()])
     date = StringField('Date', validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
-    # copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
+    keywords = StringField('Keywords')
     submit = SubmitField('Submit')
 
 
@@ -69,7 +69,7 @@ class AddAVForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     authors = StringField('Authors', validators=[DataRequired()])
     price = IntegerField('Price', validators=[NumberRange(min=1)])
-    # copies = IntegerField('Number of copies', validators=[NumberRange(min=0)])
+    keywords = StringField('Keywords')
     submit = SubmitField('Submit')
 
 
@@ -108,9 +108,7 @@ class ApproveForm(FlaskForm):
     student = SubmitField(label="Student")
     faculty = SubmitField(label="Faculty")
     visiting_professor = SubmitField(label="Visiting Professor")
-    decline = SubmitField(label="Decline")
-
-
-class ApproveDocumentForm(FlaskForm):
-    approve = SubmitField(label="Approve")
+    libr1 = SubmitField(label="Libr-1")
+    libr2 = SubmitField(label="Libr-2")
+    libr3 = SubmitField(label="Libr-3")
     decline = SubmitField(label="Decline")

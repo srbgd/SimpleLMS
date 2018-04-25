@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['changepasswordform',['ChangePasswordForm',['../classforms_1_1ChangePasswordForm.html',1,'forms']]],
-  ['command',['Command',['../classcommand_1_1Command.html',1,'command']]],
-  ['config',['Config',['../classconfig_1_1Config.html',1,'config']]],
-  ['core',['Core',['../classcore_1_1Core.html',1,'core']]]
+  ['changepasswordform',['ChangePasswordForm',['../classSimpleLMS-master_1_1forms_1_1ChangePasswordForm.html',1,'SimpleLMS-master::forms']]],
+  ['command',['Command',['../classSimpleLMS-master_1_1command_1_1Command.html',1,'SimpleLMS-master::command']]],
+  ['config',['Config',['../classSimpleLMS-master_1_1config_1_1Config.html',1,'SimpleLMS-master::config']]],
+  ['core',['Core',['../classSimpleLMS-master_1_1core_1_1Core.html',1,'SimpleLMS-master::core']]]
 ];

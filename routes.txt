@@ -1,0 +1,37 @@
+'/', methods=['POST', 'GET']
+'/documents', methods=['POST', 'GET']
+'/results', methods=['POST', 'GET']
+'/document/<int:doc_id>'
+'/edit_document/<int:doc_id>', methods=["GET", "POST"]
+'/delete_document/<int:doc_id>', methods=["GET", "POST"]
+'/add_documents/'
+'/add_document/<int:action_id>', methods=["GET", "POST"]
+'/delete_copy/<int:origin_id>'
+'/delete_copies/<int:origin_id>'
+'/user/'
+'/user/<int:user_id>'
+'/edit_profile/<int:user_id>', methods=["POST", "GET"]
+'/change_password/<int:user_id>', methods=["POST", "GET"]
+'/request_document/<int:doc_id>', methods=["GET", "POST"]
+'/request_return/<int:copy_id>', methods=["POST", "GET"]
+"/renew/<int:doc_id>"
+'/check_out/<int:doc_id>'
+"/users"
+"/overdue_users"
+'/return/<int:copy_id>'
+'/checked_out'
+'/delete_user/<int:user_id>'
+'/registration_requests', methods=["GET", "POST"]
+'/documents_requests/', methods=['GET', 'POST']
+'/approve_request/<int:req_id>'
+'/decline_request/<int:req_id>'
+'/outstanding_request_on/<int:doc_id>'
+'/outstanding_request_off/<int:doc_id>'
+'/register', methods=['GET', 'POST']
+'/login', methods=['GET', 'POST']
+'/logout'
+'/all_notifications'
+'/logs'
+'/delete_all_logs'
+'/delete_all_notifications'
+'/sorry'

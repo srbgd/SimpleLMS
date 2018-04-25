@@ -1,10 +1,8 @@
 from core import Core
-from mongo_database import DataBase as db
 from config import Config
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
-from forms import LoginForm, RegistrationForm, EditProfileForm, ChangePasswordForm, SearchForm, SelectForm, ApproveForm, \
-	ApproveDocumentForm
+from forms import LoginForm, RegistrationForm, EditProfileForm, ChangePasswordForm, SearchForm, SelectForm, ApproveForm
 from forms import AddBookForm, AddReferenceBookForm, AddJournalForm, AddAVForm, AddCopies
 
 import json
@@ -18,6 +16,7 @@ core = None
 
 
 def login_required(func):
+	"""Decorator to require to be logged"""
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		user_id = session.get('user_id')
@@ -30,6 +29,7 @@ def login_required(func):
 
 
 def can_do_a_thing_wrapper(thing):
+	"""Helping function to check whether a user can perform a certain action"""
 	user_id = session.get('user_id')
 	print(thing, can_do("can_" + thing))
 	if user_id is not None:
@@ -43,6 +43,8 @@ def can_do_a_thing_wrapper(thing):
 
 
 def can_do_a_thing_to_cookie(user_id, thing):
+	"""Helping function to check whether a user can perform a certain action.
+	Returns 1 if a user can, 0 otherwise"""
 	print(core.find_by_id(user_id)['type'], thing)
 	print(core.check_permissions(core.find_by_id(user_id)['type'], thing))
 	if core.check_permissions(core.find_by_id(user_id)['type'], thing):
@@ -52,6 +54,7 @@ def can_do_a_thing_to_cookie(user_id, thing):
 
 
 def can_modify_wrapper(func):
+	"""decorator to check whether a user has permission 'modify' """
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('modify')
@@ -60,6 +63,7 @@ def can_modify_wrapper(func):
 
 
 def can_add_wrapper(func):
+	"""decorator to check whether a user has permission 'insert' (add documents) """
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('insert')
@@ -68,6 +72,7 @@ def can_add_wrapper(func):
 
 
 def can_delete_wrapper(func):
+	"""decorator to check whether a user has permission 'delete' (documents)"""
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('delete')
@@ -76,6 +81,7 @@ def can_delete_wrapper(func):
 
 
 def can_place_outstanding_request_wrapper(func):
+	"""decorator to check whether a user has permission 'place outstanding request' """
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('outstanding-request')
@@ -84,6 +90,7 @@ def can_place_outstanding_request_wrapper(func):
 
 
 def can_edit_user_page_wrapper(func):
+	"""decorator to check whether a user can modify user page of a given user"""
 	@wraps(func)
 	def wrapper(user_id):
 		current_user_id = session.get('user_id')
@@ -96,6 +103,7 @@ def can_edit_user_page_wrapper(func):
 
 
 def can_check_out_wrapper(func):
+	"""decorator to check whether a user has permission 'check out' """
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		can_do = can_do_a_thing_wrapper('check_out')
@@ -107,6 +115,7 @@ def can_check_out_wrapper(func):
 
 
 def admin_required(func):
+	"""decorator to check whether a user is admin"""
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		user = get_current_user()
@@ -117,8 +126,9 @@ def admin_required(func):
 	return wrapper
 
 
-def can_do(thing):
-	return True if request.cookies.get(thing) == "1" else False
+def can_do(action):
+	"""translate cookies to True and False for a given action"""
+	return True if request.cookies.get(action) == "1" else False
 
 
 def can_add():
@@ -137,117 +147,25 @@ def can_check_out():
 	return can_do("can_check_out")
 
 
-@app.route('/', methods=['POST', 'GET'])
-@app.route('/documents', methods=['POST', 'GET'])
-@login_required
-def documents():
-	"""rendering documents (main page)"""
-	search_form = SearchForm(request.form)
-	print("ah?")
-	if request.method == "POST":
-		# print("yep")
-		return search_results(search_form.search.data)
-	return render_template('documents/documents.html', documents=core.find_all_documents(), user=get_current_user(), can_modify=can_modify(), search_form=search_form)
-
-
-@app.route('/results', methods=['POST', 'GET'])
-def search_results(search_string):
-	"""search for given string "search" """
-	search_form = SearchForm(request.form)
-	results = core.search(search_string)
-	print("results", results, not results)
-	if results is []:
-		flash('No results found!')
-		return redirect('/')
+def checked_box(box, box_cookies=None):
+	"""return 'checked' if a check box is chosen"""
+	if box_cookies is None:
+		box_cookies = request.cookies.get(box)
+	if box == 'where':
+		inquiry = 'keywords'
 	else:
-		return render_template('documents/results.html', documents=results, user=get_current_user(), can_modify=can_modify(), search_form=search_form)
+		inquiry = 'AND'
+	return 'checked' if box_cookies == inquiry else ''
 
 
 def get_current_user():
+	"""return current user (from encrypted cookies)"""
 	return core.find_by_id(session.get('user_id'))
 
 
 def get_current_user_id():
+	"""return current user id (from encrypted cookies)"""
 	return session.get('user_id')
-
-
-@app.route('/check_out/<int:doc_id>')
-@can_check_out_wrapper
-def check_out(doc_id):
-	"""check our document with id=doc_id"""
-	if core.check_out(doc_id, dict()):
-		core.log(get_current_user_id(), "check out", doc_id)
-		flash("Checked out document with id {}".format(doc_id))
-	else:
-		flash("Failed to checked out document with id {}".format(doc_id))
-	return redirect(url_for('document', doc_id=doc_id))
-
-
-@app.route("/users")
-@can_modify_wrapper
-def users():
-	return render_template("users/users.html", users=core.find_all_users(), user=get_current_user(), can_modify=can_modify())
-
-
-@app.route("/overdue_users")
-@can_modify_wrapper
-def overdue_users():
-	"""For librarian to get users with overdue"""
-	return render_template("users/users.html", users=core.get_all_users_with_overdue(), user=get_current_user(), can_modify=can_modify())
-
-
-def add_n_copies(origin_id, n):
-	"""add n copies of book origin_id"""
-	if n is not None:
-		for i in range(n):
-			core.add_copy(origin_id, dict())
-
-
-@app.route('/return/<int:copy_id>')
-@can_modify_wrapper
-def return_document(copy_id):
-	"""rendering returning copy with id=copy_id"""
-	if core.give_back(copy_id) is not None:
-		flash("Returned book with id {}".format(copy_id))
-	else:
-		flash("Failed to return book with id {}".format(copy_id))
-	return redirect(url_for('document', doc_id=core.find_by_id(copy_id)['attributes']['origin_id']))
-
-
-@app.route('/document/<int:doc_id>')
-@login_required
-def document(doc_id):
-	"""rendering document page with id=doc_id"""
-	document = core.find_by_id(doc_id)
-	if not core.check_user_type(document['type']):
-		copies = core.find("copy", {"origin_id": doc_id})
-		available_copies = 0
-
-		held_copies = []
-		for copy in copies:
-			if copy['attributes']['user_id'] is None:
-				available_copies += 1
-			else:
-				held_copies.append(copy)
-		names = users_names(held_copies)
-		current_user = get_current_user()
-		if current_user and core.find("copy", {"user_id": current_user['id'], "origin_id": doc_id}) != []:
-			copy_id = core.find("copy", {"user_id": current_user['id'], "origin_id": doc_id})[0]['id']
-		else:
-			copy_id = 0
-		priority_queue = core.get_queue(doc_id)
-		names_and_types = get_names_and_types_from_queue(priority_queue)
-		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=get_current_user(),
-							   can_modify=can_modify(), can_delete=can_delete(),
-							   available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
-							   names=names, overdue_days=overdue_days(held_copies), requested=user_requested_to_check_out(doc_id),
-							   requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
-							   overdue=get_overdue(copy_id), can_renew=core.can_renew(doc_id, get_current_user()),
-							   priority_queue=priority_queue, names_and_types=names_and_types,
-							   can_place_outstanding_request = core.check_permissions(get_current_user()["type"], "outstanding-request"),  # TODO not working
-							   is_outstanding_request=core.placed_outstanding_request(doc_id))
-	else:
-		return redirect(url_for('sorry'))
 
 
 def get_names_and_types_from_queue(priority_queue):
@@ -259,13 +177,11 @@ def get_names_and_types_from_queue(priority_queue):
 	return names_and_types
 
 
-@app.route("/renew/<int:doc_id>")
-@can_check_out_wrapper
-def renew(doc_id):
-	"""Renew a document by current user"""
-	if not core.renew(doc_id, get_current_user()):
-		flash("Failed to renew book with id= {}".format(doc_id))
-	return redirect(url_for("document", doc_id=doc_id))
+def add_n_copies(origin_id, n):
+	"""add n copies of book origin_id"""
+	if n is not None:
+		for i in range(n):
+			core.add_copy(origin_id, dict())
 
 
 def user_requested_to_return(copy_id):
@@ -275,28 +191,7 @@ def user_requested_to_return(copy_id):
 
 def user_requested_to_check_out(doc_id):
 	"""Check if a user requested to check out a document"""
-	return (core.find("request", {"action": "check-out", "target_id": doc_id, "user_id": get_current_user()['id']})) != []
-
-
-@app.route('/delete_copy/<int:origin_id>')
-@can_modify_wrapper
-def delete_copy(origin_id):
-	"""Delete 1 copy of a document"""
-	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})  # delete_one?
-	core.log(get_current_user_id(),"delete n copies", origin_id, "n=1")
-	return redirect(url_for("document", doc_id=origin_id))
-
-
-@app.route('/delete_copies/<int:origin_id>')
-@can_modify_wrapper
-def delete_copies(origin_id):
-	"""Delete all available copies of a document"""
-	if can_modify_wrapper():
-		core.delete_available_copies(origin_id)
-		core.log(get_current_user_id(), "delete n copies", origin_id, "n=all available")
-		return redirect(url_for("document", doc_id=origin_id))
-	else:
-		return redirect(url_for("sorry"))
+	return (core.find("request", {"action": "check_out", "target_id": doc_id, "user_id": get_current_user()['id']})) != []
 
 
 def overdue_days(copies):
@@ -352,6 +247,120 @@ def user_checked(doc_id):
 	return checked
 
 
+def get_fines(document):
+	return sum([core.get_fine(copy) for copy in core.find("copy", {"origin_id": document['id']})] + [0])
+
+
+def get_set_of_permissions_in_cookie():
+	return ["modify", "insert", "delete", "check_out"]
+
+
+def get_copies(user_id):
+	"""get copies of user with id = user_id"""
+	return core.find(type="copy", attributes={"user_id": user_id})
+
+
+def user_documents_names(copies):
+	"""method for getting names of origin books of given copies"""
+	documents_names = []
+	for copy in copies:
+		documents_names.append(core.find_by_id(copy['attributes']['origin_id'])['attributes']['title'])
+	return documents_names
+
+
+def get_users(requests):
+	"""Get users from request items in database"""
+	users = []
+	for request in requests:
+		users.append(core.find_by_id(request['attributes']['user_id']))
+	return users
+
+
+def get_documents(requests):
+	"""Get documents from request items in database"""
+	documents = []
+	for request in requests:
+		if request['attributes']['action'] == "check_out":
+			documents.append(core.find_by_id(request['attributes']['target_id']))
+		else:
+			documents.append(
+				core.find_by_id(core.find_by_id(request['attributes']['target_id'])['attributes']['origin_id']))
+	return documents
+
+
+@app.route('/', methods=['POST', 'GET'])
+@app.route('/documents', methods=['POST', 'GET'])
+@login_required
+def documents():
+	"""rendering documents (main page)"""
+	search_form = SearchForm(request.form)
+	if request.method == "POST":
+		return search_results(search_form.search.data)
+	return render_template('documents/documents.html', documents=core.find_all_documents(), user=get_current_user(),
+						   can_modify=can_modify(), search_form=search_form)
+
+
+@app.route('/results', methods=['POST', 'GET'])
+def search_results(search_string):
+	"""search for given string "search" """
+	search_form = SearchForm(request.form)
+	if request.form.get('keywords') is not None:
+		where = "keywords"
+	else:
+		where = "title"
+	if request.form.get('and') is not None:
+		how = "AND"
+	else:
+		how = "OR"
+	results = core.search(what=search_string, how=how, where=where)
+	print(search_string, " how: ", how, " where: ", where)
+	print("results", results)
+	if results is []:
+		flash('No results found!')
+		resp = make_response(redirect('/'))
+	else:
+		resp = make_response(render_template('documents/results.html', documents=results, user=get_current_user(), can_modify=can_modify(), search_form=search_form, where=checked_box('where',where), how=checked_box('how',how)))
+	resp.set_cookie('how', how)
+	resp.set_cookie('where', where)
+	return resp
+
+
+@app.route('/document/<int:doc_id>')
+@login_required
+def document(doc_id):
+	"""rendering document page with id=doc_id"""
+	document = core.find_by_id(doc_id)
+	if not core.check_user_type(document['type']):
+		copies = core.find("copy", {"origin_id": doc_id})
+		available_copies = 0
+
+		held_copies = []
+		for copy in copies:
+			if copy['attributes']['user_id'] is None:
+				available_copies += 1
+			else:
+				held_copies.append(copy)
+		names = users_names(held_copies)
+		current_user = get_current_user()
+		if current_user and core.find("copy", {"user_id": current_user['id'], "origin_id": doc_id}) != []:
+			copy_id = core.find("copy", {"user_id": current_user['id'], "origin_id": doc_id})[0]['id']
+		else:
+			copy_id = 0
+		priority_queue = core.get_queue(doc_id)
+		names_and_types = get_names_and_types_from_queue(priority_queue)
+		return render_template('documents/document.html', document=core.find_by_id(doc_id), user=get_current_user(),
+							   can_modify=can_modify(), can_delete=can_delete(),
+							   available_copies=available_copies, held_copies=held_copies, checked=user_checked(doc_id),
+							   names=names, overdue_days=overdue_days(held_copies), requested=user_requested_to_check_out(doc_id),
+							   requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
+							   overdue=get_overdue(copy_id), can_renew=core.can_renew(doc_id, get_current_user()),
+							   priority_queue=priority_queue, names_and_types=names_and_types,
+							   can_place_outstanding_request = core.check_permissions(get_current_user()["type"], "outstanding-request"),  # TODO not working
+							   is_outstanding_request=core.placed_outstanding_request(doc_id))
+	else:
+		return redirect(url_for('sorry'))
+
+
 @app.route('/edit_document/<int:doc_id>', methods=["GET", "POST"])
 @can_modify_wrapper
 def edit_document(doc_id):
@@ -383,7 +392,8 @@ def edit_document(doc_id):
 		core.log(get_current_user_id(), "modify a document", doc_id)
 		if add_copies:
 			add_n_copies(doc_id, add_copies.number.data)
-			core.log(get_current_user_id(), "add n copies", doc_id, "n="+add_copies.number.data)
+			if add_copies.number.data is not None:
+				core.log(get_current_user_id(), "add n copies", doc_id, "n="+str(add_copies.number.data))
 		return redirect(url_for("document", doc_id=doc_id))
 	elif request.method == 'GET':
 		old_attributes = core.find_by_id(doc_id)['attributes']
@@ -412,20 +422,6 @@ def add_documents():
 	"""rendering add documents page"""
 	return render_template('documents/add_documents.html', user=get_current_user(),
 						   can_add=can_add(), can_modify=can_modify())
-
-
-@app.route('/checked_out')
-@can_modify_wrapper
-def checked_out():
-	"""Check if a current user can check out"""
-	checked_out = core.get_all_checked_out_documents()
-	fines = [get_fines(document) for document in checked_out]
-	return render_template("documents/checked_out.html", documents=checked_out, user=get_current_user(), fines=fines,
-						   can_modify=can_modify())
-
-
-def get_fines(document):
-	return sum([core.get_fine(copy) for copy in core.find("copy", {"origin_id": document['id']})] + [0])
 
 
 @app.route('/add_document/<int:action_id>', methods=["GET", "POST"])
@@ -478,39 +474,31 @@ def add_document(action_id):
 		return redirect(url_for('sorry'))
 
 
-@app.route('/delete_user/<int:user_id>')
-@can_delete_wrapper
-def delete_user(user_id):
-	"""Delete a user with given id"""
-	copies = get_copies(user_id)
-	if len(copies) > 0:
-		flash("Failed to delete user with id {}. He has documents to return".format(user_id))
-		return redirect(url_for("user", user_id=user_id))
-	core.db.delete(user_id)
-	core.log(get_current_user_id(), "delete a user", user_id)
-	return redirect(url_for("users"))
+@app.route('/delete_copy/<int:origin_id>')
+@can_modify_wrapper
+def delete_copy(origin_id):
+	"""Delete 1 copy of a document"""
+	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})  # delete_one?
+	core.log(get_current_user_id(),"delete n copies", origin_id, "n=1")
+	return redirect(url_for("document", doc_id=origin_id))
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-	"""rendering login"""
-	form = LoginForm(request.form)
-	if form.validate_on_submit():
-		user_id = core.login(form.login.data, form.password.data)
-		if user_id is not False:
-			session['user_id'] = user_id
-			flash('Login requested for user {}, remember_me={}'.format(
-				form.login.data, form.remember_me.data))
-			resp = make_response(redirect(url_for('documents')))
-			permissions = get_set_of_permissions_in_cookie()
-			for permission in permissions:
-				resp.set_cookie("can_" + permission, can_do_a_thing_to_cookie(user_id, permission))
-			return resp
-	return render_template('users/login.html', title='Sign In', form=form, can_modify=can_modify())
+@app.route('/delete_copies/<int:origin_id>')
+@can_modify_wrapper
+def delete_copies(origin_id):
+	"""Delete all available copies of a document"""
+	if can_modify_wrapper():
+		core.delete_available_copies(origin_id)
+		core.log(get_current_user_id(), "delete n copies", origin_id, "n=all available")
+		return redirect(url_for("document", doc_id=origin_id))
+	else:
+		return redirect(url_for("sorry"))
 
 
-def get_set_of_permissions_in_cookie():
-	return ["modify", "insert", "delete", "check_out"]
+@app.route('/user/')
+def user_free():
+	"""redirecting for page with current user page"""
+	return redirect(url_for('user', user=get_current_user()))
 
 
 @app.route('/user/<int:user_id>')
@@ -526,26 +514,6 @@ def user(user_id):
 						   notifications=notifications, can_delete=can_delete(),
 						   a_user_can_check_out=True if can_do_a_thing_to_cookie(user_id, "check_out") == "1" else False,
 						   can_modify=can_modify(), can_change_password=user_id == get_current_user_id())
-
-
-def get_copies(user_id):
-	"""get copies of user with id = user_id"""
-	return core.find(type="copy", attributes={"user_id": user_id})
-
-
-def user_documents_names(copies):
-	"""method for getting names of origin books of given copies"""
-	documents_names = []
-	for copy in copies:
-		documents_names.append(core.find_by_id(copy['attributes']['origin_id'])['attributes']['title'])
-
-	return documents_names
-
-
-@app.route('/user/')
-def user_free():
-	"""redirecting for page with current user page"""
-	return redirect(url_for('user', user=get_current_user()))
 
 
 @app.route('/edit_profile/<int:user_id>', methods=["POST", "GET"])
@@ -570,7 +538,7 @@ def edit_profile(user_id):
 		return redirect(url_for('user', user_id=user_id))
 	elif request.method == 'GET':
 		form.login.data = user['attributes']['login']
-		form['name'].data = user['attributes']['name']
+		form.name.data = user['attributes']['name']
 		form.address.data = user['attributes']['address']
 		form.phone_number.data = user['attributes']['phone-number']
 		form.card_number.data = user['attributes']['card-number']
@@ -594,23 +562,194 @@ def change_password(user_id):
 						   form=form, user=get_current_user(), can_modify=can_modify())
 
 
-@app.route('/sorry')
-def sorry():
-	"""page for wrong permissions"""
-	return render_template('sorry.html', info='No permissions', user=get_current_user(),
+@app.route('/request_document/<int:doc_id>', methods=["GET", "POST"])
+@can_check_out_wrapper
+def request_document(doc_id):
+	"""For user to request a document to check out"""
+	if core.request_check_out(doc_id, get_current_user()):
+		return redirect(url_for("document", doc_id=doc_id))
+	else:
+		flash("Failed to request a document with id={}".format(doc_id))
+		return redirect(url_for("document", doc_id=doc_id))
+
+
+@app.route('/request_return/<int:copy_id>', methods=["POST", "GET"])
+@can_check_out_wrapper
+def request_return(copy_id):
+	"""For user to request a document to return"""
+	if not core.request_return(copy_id, get_current_user()):
+		flash("Failed to return document with id={}".format(copy_id))
+	return redirect(url_for("document", doc_id=core.find_by_id(copy_id)['attributes']['origin_id']))
+
+
+@app.route("/renew/<int:doc_id>")
+@can_check_out_wrapper
+def renew(doc_id):
+	"""Renew a document by current user"""
+	if not core.renew(doc_id, get_current_user()):
+		flash("Failed to renew book with id= {}".format(doc_id))
+	return redirect(url_for("document", doc_id=doc_id))
+
+
+@app.route('/check_out/<int:doc_id>')
+@can_check_out_wrapper
+def check_out(doc_id):
+	"""check our document with id=doc_id"""
+	if core.check_out(doc_id, dict()):
+		core.log(get_current_user_id(), "check out", doc_id)
+		flash("Checked out document with id {}".format(doc_id))
+	else:
+		flash("Failed to checked out document with id {}".format(doc_id))
+	return redirect(url_for('document', doc_id=doc_id))
+
+
+@app.route("/users")
+@can_modify_wrapper
+def users():
+	return render_template("users/users.html", users=core.find_all_users(), user=get_current_user(), can_modify=can_modify())
+
+
+@app.route("/overdue_users")
+@can_modify_wrapper
+def overdue_users():
+	"""For librarian to get users with overdue"""
+	return render_template("users/users.html", users=core.get_all_users_with_overdue(), user=get_current_user(), can_modify=can_modify())
+
+
+@app.route('/return/<int:copy_id>')
+@can_modify_wrapper
+def return_document(copy_id):
+	"""rendering returning copy with id=copy_id"""
+	if core.give_back(copy_id) is not None:
+		flash("Returned book with id {}".format(copy_id))
+	else:
+		flash("Failed to return book with id {}".format(copy_id))
+	return redirect(url_for('document', doc_id=core.find_by_id(copy_id)['attributes']['origin_id']))
+
+
+@app.route('/checked_out')
+@can_modify_wrapper
+def checked_out():
+	"""Check if a current user can check out"""
+	checked_out = core.get_all_checked_out_documents()
+	fines = [get_fines(document) for document in checked_out]
+	return render_template("documents/checked_out.html", documents=checked_out, user=get_current_user(), fines=fines,
 						   can_modify=can_modify())
 
 
-@app.route('/logout')
-def logout():
-	"""login without attributes - means logout"""
-	core.login()
-	session.pop('user_id', None)
-	resp = make_response(redirect(url_for('login')))
-	permissions = get_set_of_permissions_in_cookie()
-	for permission in permissions:
-		resp.set_cookie("can_" + permission, "0")
-	return resp
+@app.route('/delete_user/<int:user_id>')
+@can_delete_wrapper
+def delete_user(user_id):
+	"""Delete a user with given id"""
+	copies = get_copies(user_id)
+	if len(copies) > 0:
+		flash("Failed to delete user with id {}. He has documents to return".format(user_id))
+		return redirect(url_for("user", user_id=user_id))
+	core.db.delete(user_id)
+	core.log(get_current_user_id(), "delete a user", user_id)
+	return redirect(url_for("users"))
+
+
+@app.route('/registration_requests', methods=["GET", "POST"])
+@can_add_wrapper
+def registration_requests():  # TODO: Get rid of  buttons
+	"""For librarian to assign a user's status"""
+	users = core.get_all_unconfirmed_users()
+	forms = [ApproveForm(request.form) for i in range(len(users))]
+	for i in range(len(forms)):
+		if forms[i].validate_on_submit():
+			if forms[i].student.data:
+				new_type = "student"
+			elif forms[i].faculty.data:
+				new_type = "faculty"
+			elif forms[i].visiting_professor.data:
+				new_type = "visiting-professor"
+			elif forms[i].libr1.data:
+				new_type = "librarian-privilege-1"
+			elif forms[i].libr2.data:
+				new_type = "librarian-privilege-2"
+			elif forms[i].libr3.data:
+				new_type = "librarian-privilege-3"
+			if forms[i].decline.data:
+				core.delete(id=users[i]['id'])
+				core.log(get_current_user_id(), "decline registration", users[i]['id'], new_type)
+			else:
+				core.modify(id=users[i]['id'], new_type=new_type)
+				core.log(get_current_user_id(), "accept registration", users[i]['id'], new_type)
+			return redirect(url_for("registration_requests"))
+	return render_template("users/registration_requests.html", user=get_current_user(), users=users, forms=forms,
+						   can_modify=can_modify())
+
+
+@app.route('/documents_requests/', methods=['GET', 'POST'])
+@can_modify_wrapper
+def documents_requests():
+	"""For librarian to work with documents' requests"""
+	requests = core.courteous_find({"type": "request"})
+	if requests:
+		users = get_users(requests)
+		documents = get_documents(requests)
+	else:
+		users = []
+		documents = []
+	return render_template("documents/documents_requests.html", user=get_current_user(), requests=requests, users=users,
+						   documents=documents, can_modify=can_modify())
+
+
+@app.route('/approve_request/<int:req_id>')
+@can_modify_wrapper
+def approve_request(req_id):
+	"""for librarian: approve request"""
+	req = core.find_by_id(req_id)
+	try:
+		if req['attributes']['action'] == "check_out":
+			if not core.approve_check_out(req['id'], get_current_user()):
+				flash("failed to approve check out")
+			core.log(get_current_user_id(), 'approve to check out', req['attributes']['target_id'], "of a user with id " + str(req['attributes']['user']))
+		else:
+			if not core.approve_return(req['id'], get_current_user()):
+				flash("failed to approve return")
+			core.log(get_current_user_id(), 'approve to return', req['attributes']['target_id'],
+					 "of a user with id " + str(req['attributes']['user_id']))
+	except Exception:
+		return redirect(url_for("sorry"))
+	return redirect(url_for("documents_requests"))
+
+
+@app.route('/decline_request/<int:req_id>')
+@can_modify_wrapper
+def decline_request(req_id):
+	"""for librarian: decline request"""
+	req = core.find_by_id(req_id)
+	if req['attributes']['action'] == "check_out":
+		if not core.decline_check_out(req['id'], get_current_user()):
+			flash("failed to decline check out")
+		core.log(get_current_user_id(), 'decline to check out', req['attributes']['target_id'],
+					 "of a user with id " + str(req['attributes']['user_id']))
+	else:
+		if not core.decline_return(req['id'], get_current_user()):
+			flash("failed to decline return")
+		core.log(get_current_user_id(), 'decline to return', req['attributes']['target_id'],
+				 "of a user with id " + str(req['attributes']['user_id']))
+	return redirect(url_for("documents_requests"))
+
+
+@app.route('/outstanding_request_on/<int:doc_id>')
+@can_place_outstanding_request_wrapper
+def outstanding_request_on(doc_id):
+	"""for librarian: place an outstanding request"""
+	core.outstanding_request(doc_id, get_current_user())
+	core.log(get_current_user_id(), "place an outstanding request", doc_id)
+	return redirect(url_for("document", doc_id=doc_id))
+
+
+@app.route('/outstanding_request_off/<int:doc_id>')
+@can_place_outstanding_request_wrapper
+def outstanding_request_off(doc_id):
+	"""for librarian: take off an outstanding request"""
+	core.delete_outstanding_request(doc_id)
+	core.log(get_current_user_id(), "take off an outstanding request", doc_id)
+	return redirect(url_for("document", doc_id=doc_id))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -632,137 +771,57 @@ def register():
 						   can_modify=can_modify())
 
 
-@app.route('/registration_requests', methods=["GET", "POST"])
-@can_add_wrapper
-def registration_requests():  # TODO: Get rid of  buttons
-	"""For librarian to assign a user's status"""
-	users = core.get_all_unconfirmed_users()
-	forms = [ApproveForm(request.form) for i in range(len(users))]
-	for i in range(len(forms)):
-		if forms[i].validate_on_submit():  # no librarians
-			if forms[i].student.data:
-				new_type = "student"
-			elif forms[i].faculty.data:
-				new_type = "faculty"
-			elif forms[i].visiting_professor.data:
-				new_type = "visiting-professor"
-			elif forms[i].decline.data:
-				core.delete(id=users[i]['id'])
-			core.modify(id=users[i]['id'], new_type=new_type)
-			core.log(get_current_user_id(), "accept registration", users[i]['id'], new_type)
-			return redirect(url_for("registration_requests"))
-	return render_template("users/registration_requests.html", user=get_current_user(), users=users, forms=forms,
-						   can_modify=can_modify())
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+	"""rendering login"""
+	form = LoginForm(request.form)
+	if form.validate_on_submit():
+		user_id = core.login(form.login.data, form.password.data)
+		if user_id is not False:
+			session['user_id'] = user_id
+			flash('Login requested for user {}, remember_me={}'.format(
+				form.login.data, form.remember_me.data))
+			resp = make_response(redirect(url_for('documents')))
+			permissions = get_set_of_permissions_in_cookie()
+			for permission in permissions:
+				resp.set_cookie("can_" + permission, can_do_a_thing_to_cookie(user_id, permission))
+			return resp
+	return render_template('users/login.html', title='Sign In', form=form, can_modify=can_modify())
 
 
-def get_users(requests):
-	"""Get users from request items in database"""
-	users = []
-	for request in requests:
-		users.append(core.find_by_id(request['attributes']['user_id']))
-	return users
-
-
-def get_documents(requests):
-	"""Get documents from request items in database"""
-	documents = []
-	for request in requests:
-		if request['attributes']['action'] == "check-out":
-			documents.append(core.find_by_id(request['attributes']['target_id']))
-		else:
-			documents.append(
-				core.find_by_id(core.find_by_id(request['attributes']['target_id'])['attributes']['origin_id']))
-	return documents
-
-
-@app.route('/documents_requests/', methods=['GET', 'POST'])
-@can_modify_wrapper
-def documents_requests():
-	"""For librarian to work with documents' requests"""
-	requests = core.courteous_find({"type": "request"})
-	if requests:
-		users = get_users(requests)
-		documents = get_documents(requests)
-	else:
-		users = []
-		documents = []
-	return render_template("documents/documents_requests.html", user=get_current_user(), requests=requests, users=users,
-						   documents=documents, can_modify=can_modify())
-
-
-@app.route('/approve_request/<int:req_id>')
-@can_modify_wrapper
-def approve_request(req_id):  # TODO: if didn't find req
-	req = core.find_by_id(req_id)
-	if req['attributes']['action'] == "check-out":
-		if not core.approve_check_out(req['id'], get_current_user()):
-			flash("failed to approve check out")
-	else:
-		if not core.approve_return(req['id'], get_current_user()):
-			flash("failed to approve return")
-	return redirect(url_for("documents_requests"))
-
-
-@app.route('/decline_request/<int:req_id>')
-@can_modify_wrapper
-def decline_request(req_id):
-	req = core.find_by_id(req_id)
-	if req['attributes']['action'] == "check-out":
-		if not core.decline_check_out(req['id'], get_current_user()):
-			flash("failed to decline check out")
-	else:
-		if not core.decline_return(req['id'], get_current_user()):
-			flash("failed to decline return")
-	return redirect(url_for("documents_requests"))
-
-
-@app.route('/request_document/<int:doc_id>', methods=["GET", "POST"])
-@can_check_out_wrapper
-def request_document(doc_id):
-	"""For user to request a document to check out"""
-	if core.request_check_out(doc_id, get_current_user()):
-		return redirect(url_for("document", doc_id=doc_id))
-	else:
-		flash("Failed to request a document with id={}".format(doc_id))
-		return redirect(url_for("document", doc_id=doc_id))
-
-
-@app.route('/request_return/<int:copy_id>', methods=["POST", "GET"])
-@can_check_out_wrapper
-def request_return(copy_id):
-	"""For user to request a document to return"""
-	if not core.request_return(copy_id, get_current_user()):
-		flash("Failed to return document with id={}".format(copy_id))
-	return redirect(url_for("document", doc_id=core.find_by_id(copy_id)['attributes']['origin_id']))
-
-
-@app.route('/outstanding_request_on/<int:doc_id>')
-@can_place_outstanding_request_wrapper
-def outstanding_request_on(doc_id):
-	core.outstanding_request(doc_id, get_current_user())
-	core.log(get_current_user_id(), "place an outstanding request", doc_id)
-	return redirect(url_for("document", doc_id=doc_id))
-
-
-@app.route('/outstanding_request_off/<int:doc_id>')
-@can_place_outstanding_request_wrapper
-def outstanding_request_off(doc_id):
-	core.delete_outstanding_request(doc_id)
-	core.log(get_current_user_id(), "take off an outstanding request", doc_id)
-	return redirect(url_for("document", doc_id=doc_id))
+@app.route('/logout')
+def logout():
+	"""login without attributes - means logout"""
+	core.login()
+	session.pop('user_id', None)
+	resp = make_response(redirect(url_for('login')))
+	permissions = get_set_of_permissions_in_cookie()
+	for permission in permissions:
+		resp.set_cookie("can_" + permission, "0")
+	return resp
 
 
 @app.route('/all_notifications')
 @can_modify_wrapper
 def all_notifications():
+	"""for librarian: all notification of all users"""
 	notifications = core.get_all_notifications()
 	return render_template("users/all_notifications.html", notifications=notifications, user=get_current_user(),
 						   can_modify=can_modify())
 
 
+@app.route('/delete_all_notifications')
+@can_modify_wrapper
+def delete_all_notifications():
+	"""for librarian: delete all notification of all users"""
+	core.delete_all_notifications()
+	return redirect(url_for('all_notifications'))
+
+
 @app.route('/logs')
 @admin_required
 def logs():
+	"""for admin: see all logs of the system"""
 	logs = core.get_sorted_logs()
 	return render_template("logs.html", logs=logs, user=get_current_user(), can_modify=can_modify())
 
@@ -770,15 +829,16 @@ def logs():
 @app.route('/delete_all_logs')
 @admin_required
 def delete_all_logs():
+	"""for admin: delete all logs"""
 	core.delete_all_logs()
 	return redirect(url_for("logs"))
 
 
-@app.route('/delete_all_notifications')
-@can_modify_wrapper
-def delete_all_notifications():
-	core.delete_all_notifications()
-	return redirect(url_for('all_notifications'))
+@app.route('/sorry')
+def sorry():
+	"""page for wrong permissions"""
+	return render_template('sorry.html', info='No permissions', user=get_current_user(),
+						   can_modify=can_modify())
 
 
 if __name__ == '__main__':

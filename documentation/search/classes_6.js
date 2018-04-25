@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['registrationform',['RegistrationForm',['../classforms_1_1RegistrationForm.html',1,'forms']]]
+  ['registrationform',['RegistrationForm',['../classSimpleLMS-master_1_1forms_1_1RegistrationForm.html',1,'SimpleLMS-master::forms']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['normalize_5frequest_5flist',['normalize_request_list',['../classcore_1_1Core.html#a9ec897ed7871bdead978c0302fd0d1a4',1,'core::Core']]],
-  ['notify',['notify',['../classcore_1_1Core.html#a4f3f7e9d939cae9e05ca443268846b12',1,'core::Core']]],
-  ['notify_5fqueue',['notify_queue',['../classcore_1_1Core.html#a4e338e9ff987cb0214d60a1003ed124a',1,'core::Core']]]
+  ['normalize_5frequest_5flist',['normalize_request_list',['../classSimpleLMS-master_1_1core_1_1Core.html#a155be55af6179b6928d220543e962475',1,'SimpleLMS-master::core::Core']]],
+  ['notify',['notify',['../classSimpleLMS-master_1_1core_1_1Core.html#a3056ab97af92fbd56642c72459b11d53',1,'SimpleLMS-master::core::Core']]],
+  ['notify_5fqueue',['notify_queue',['../classSimpleLMS-master_1_1core_1_1Core.html#ae95ef32f4045f4abbd56385f9bc0be2c',1,'SimpleLMS-master::core::Core']]]
 ];

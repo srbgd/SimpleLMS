@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['n',['n',['../namespacemain.html#a92cc5b45bb1ac1ac747961502aa6b700',1,'main']]],
-  ['name',['name',['../classforms_1_1EditProfileForm.html#af8758c2badbcdea83e3c33fd889078a0',1,'forms.EditProfileForm.name()'],['../classforms_1_1RegistrationForm.html#af99ae78fd6b19d0836f6e2f6d6e0eea0',1,'forms.RegistrationForm.name()']]],
-  ['normalize_5frequest_5flist',['normalize_request_list',['../classcore_1_1Core.html#a9ec897ed7871bdead978c0302fd0d1a4',1,'core::Core']]],
-  ['notify',['notify',['../classcore_1_1Core.html#a4f3f7e9d939cae9e05ca443268846b12',1,'core::Core']]],
-  ['notify_5fqueue',['notify_queue',['../classcore_1_1Core.html#a4e338e9ff987cb0214d60a1003ed124a',1,'core::Core']]],
-  ['number',['number',['../classforms_1_1AddCopies.html#ae8380a425d96476703c4abb9c511c748',1,'forms::AddCopies']]]
+  ['main',['main',['../namespaceSimpleLMS-master_1_1main.html#ae556bac49e4e20580bf84338bb4eca41',1,'SimpleLMS-master::main']]],
+  ['main_2epy',['main.py',['../main_8py.html',1,'']]],
+  ['map',['map',['../classSimpleLMS-master_1_1core_1_1Core.html#ad82eac29928a22318a00f9f0cc0d9ec7',1,'SimpleLMS-master::core::Core']]],
+  ['modify',['modify',['../classSimpleLMS-master_1_1core_1_1Core.html#ae87316be00b2eed07a8151b03a5b7775',1,'SimpleLMS-master.core.Core.modify()'],['../classSimpleLMS-master_1_1database_1_1DataBase.html#ab12f64bbdd2b52c7271bb1c8952353d1',1,'SimpleLMS-master.database.DataBase.modify()'],['../classSimpleLMS-master_1_1mongo__database_1_1DataBase.html#ab4f9f179f9a63e5275e0e8ad7e50d6de',1,'SimpleLMS-master.mongo_database.DataBase.modify()']]],
+  ['modify_5fand_5fchange_5ftype',['modify_and_change_type',['../classSimpleLMS-master_1_1mongo__database_1_1DataBase.html#a16748ca2103b1fe73e70ce0f31859405',1,'SimpleLMS-master::mongo_database::DataBase']]],
+  ['modify_5fuser',['modify_user',['../classSimpleLMS-master_1_1core_1_1Core.html#a8c8dcadf6322d7d4c11d264d73e18202',1,'SimpleLMS-master::core::Core']]],
+  ['mongo_5fdatabase_2epy',['mongo_database.py',['../mongo__database_8py.html',1,'']]]
 ];

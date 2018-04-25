@@ -22,10 +22,12 @@ class Core:
 	"""List of all users who must checkout a document today"""
 	admin = None
 
-	def search(self, what, where, how):
-		return list(filter(lambda x: (all if how == 'AND' else any)(map(lambda s: ((lambda i: str().join(map(str, i['attributes'].value()))) if where == str() else (lambda i: i['attributes'][where] if where in i['attributes'].keys() else ''))(x).find(s) != -1, what.split())), self.find_all_documents()))
+	def search(self, what, where="", how=""):
+		"""Searches for documents"""
+		return list(filter(lambda x: (all if how == 'AND' else any)(map(lambda s: ((lambda i: str().join(map(str, i['attributes'].value()))) if where == str() else (lambda i: i['attributes'][where] if where in i['attributes'].keys() else ''))(x).lower().find(s) != -1, what.lower().split())), self.find_all_documents()))
 
 	def log(self, user_id, action, target_id, comment=''):
+		"""Logs an action"""
 		self.add('log', {'user_id': user_id, 'action': action, 'target_id': target_id, 'comment': comment, 'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
 
 	def add(self, target, attributes):
@@ -169,6 +171,7 @@ class Core:
 		return list(documents)
 
 	def courteous_find(self, attributes):
+		"""Another way to find documents"""
 		return self.db.courteous_lookup(attributes)
 
 	def find_all_documents(self):
@@ -250,6 +253,7 @@ class Core:
 			return False
 
 	def check_permissions(self, user_type, command):
+		"""Checks if the user with current type has a permission to execute the current command"""
 		if user_type == 'admin':
 			return True
 		return command in [i for i in self.users if i['type'] == user_type][0]['permissions']
@@ -266,7 +270,7 @@ class Core:
 
 	def request(self, doc_id, action, current_user):
 		"""Request an action with a document"""
-		if action not in ['check-out', 'return']:
+		if action not in ['check_out', 'return']:
 			return False
 		type, attributes = 'request', {'user_id': current_user['id'], 'target_id': doc_id, 'action': action}
 		if self.find(type, attributes):
@@ -299,7 +303,7 @@ class Core:
 		elif not self.check_permissions(current_user['type'], 'approve'):
 			return False
 		else:
-			if action == 'check-out':
+			if action == 'check_out':
 				result = self.check_out(request['attributes']['target_id'], request['attributes']['user_id'])
 				if result:
 					self.delete(request_id)
@@ -345,7 +349,7 @@ class Core:
 
 	def request_check_out(self, doc_id, current_user):
 		"""Request check out a document"""
-		result = self.request(doc_id, 'check-out', current_user)
+		result = self.request(doc_id, 'check_out', current_user)
 		if all(not self.check_available_copy(i) for i in self.find('copy', {'origin_id': doc_id})) and result:
 			message = 'You are added in a queue for the document with id {} because the document is not available right now'
 			self.notify(current_user['id'], message.format(doc_id))
@@ -354,14 +358,14 @@ class Core:
 	def approve_check_out(self, request_id, current_user):
 		"""Approve check out"""
 		request = self.find_by_id(request_id)
-		result = self.approve(request_id, 'check-out', current_user)
+		result = self.approve(request_id, 'check_out', current_user)
 		self.notify_queue(request['attributes']['target_id'])
 		return result
 
 	def decline_check_out(self, request_id, current_user):
 		"""Decline check out"""
 		request = self.find_by_id(request_id)
-		result = self.decline(request_id, 'check-out', current_user)
+		result = self.decline(request_id, 'check_out', current_user)
 		self.notify_queue(request['attributes']['target_id'])
 		return result
 
@@ -384,7 +388,7 @@ class Core:
 	def get_queue(self, id):
 		"""Get queue for current document"""
 		priority = ['student', 'visiting-professor', 'faculty']
-		return sorted(self.find('request', {'target_id': id, 'action': 'check-out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
+		return sorted(self.find('request', {'target_id': id, 'action': 'check_out'}), key=lambda x: priority.index(self.find_by_id(x['attributes']['user_id'])['type']))
 
 	@staticmethod
 	def get_duration(user_type, doc_type):
@@ -451,6 +455,7 @@ class Core:
 		return self.find('outstanding-request', {'target_id': doc_id}) != []
 
 	def get_sorted_logs(self):
+		"""Returnes sorted list of all logs"""
 		return list(reversed((sorted(self.find('log', {}), key = lambda x: datetime.datetime.strptime(x['attributes']['time'], '[%d/%m/%y-%H:%M:%S]')))))
 
 	@staticmethod
@@ -473,6 +478,7 @@ class Core:
 			self.delete(notification['id'])
 
 	def delete_all_logs(self):
+		"""Deletes all logs"""
 		self.db.delete_many({"type": "log"})
 
 	def normalize_request_list(self):
@@ -559,6 +565,7 @@ class Core:
 		return True
 
 	def init_admin(self, password):
+		"""Initialize admin"""
 		self.admin = self.find('admin', {})
 		if self.admin:
 			self.admin = self.admin[0]

@@ -1,7 +1,4 @@
 var searchData=
 [
-  ['command_2epy',['command.py',['../command_8py.html',1,'']]],
-  ['config_2epy',['config.py',['../config_8py.html',1,'']]],
-  ['console_2epy',['console.py',['../console_8py.html',1,'']]],
-  ['core_2epy',['core.py',['../core_8py.html',1,'']]]
+  ['_5f_5finit_5f_5f_2epy',['__init__.py',['../____init_____8py.html',1,'']]]
 ];
