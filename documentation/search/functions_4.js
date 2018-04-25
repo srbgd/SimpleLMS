@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['edit_5fdocument',['edit_document',['../namespaceinterface.html#af3b8d211993b3e86ab0e087bd862da24',1,'interface']]],
-  ['edit_5fprofile',['edit_profile',['../namespaceinterface.html#aafdbfcbd583929ce8daab2747ea0aef0',1,'interface']]],
-  ['execute',['execute',['../classcore_1_1Core.html#a982cc720ab83f3bffcb9e1ed1dfcbaaf',1,'core::Core']]]
+  ['edit_5fdocument',['edit_document',['../namespaceSimpleLMS-master_1_1interface.html#a5b335056f9572794faa3ce340cb55743',1,'SimpleLMS-master::interface']]],
+  ['edit_5fprofile',['edit_profile',['../namespaceSimpleLMS-master_1_1interface.html#a1d96674f1e6a3c4b5415c87323b936d2',1,'SimpleLMS-master::interface']]],
+  ['execute',['execute',['../classSimpleLMS-master_1_1core_1_1Core.html#ad1359a095241338546a71c556688b939',1,'SimpleLMS-master::core::Core']]]
 ];

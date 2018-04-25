@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['update',['update',['../classdatabase_1_1DataBase.html#a968975f2c3ee323507cd1ddb4bc7a1c1',1,'database::DataBase']]],
-  ['user',['user',['../namespaceinterface.html#ae152ec162ecb68d79f8b7a722d4fec1a',1,'interface']]],
-  ['user_5fchecked',['user_checked',['../namespaceinterface.html#ad8d461d22190cb68d69d89017175dbbc',1,'interface']]],
-  ['user_5fdocuments_5fnames',['user_documents_names',['../namespaceinterface.html#a2b600492fb42d31c0a8fa535a87a951b',1,'interface']]],
-  ['user_5ffree',['user_free',['../namespaceinterface.html#a57d51edfcb98d749812701d5760062e8',1,'interface']]],
-  ['user_5frequested',['user_requested',['../namespaceinterface.html#a7bc7239abd1225782a04ef4735773b0b',1,'interface']]],
-  ['user_5frequested_5fto_5freturn',['user_requested_to_return',['../namespaceinterface.html#aa3dfbcb7a80ace9a7c6f82e41dabfc03',1,'interface']]],
-  ['users',['users',['../namespaceinterface.html#a2b4aad3292e0a51368f7507dfbc35c44',1,'interface']]],
-  ['users_5fnames',['users_names',['../namespaceinterface.html#ad416531c0e0189705de41775b752e3a2',1,'interface']]]
+  ['update',['update',['../classSimpleLMS-master_1_1database_1_1DataBase.html#af1bbb5d02491b8ecb1a4136acfa150b8',1,'SimpleLMS-master::database::DataBase']]],
+  ['user',['user',['../namespaceSimpleLMS-master_1_1interface.html#ae3ab69eb6ae839bd8725c9dfb6a54b27',1,'SimpleLMS-master::interface']]],
+  ['user_5fchecked',['user_checked',['../namespaceSimpleLMS-master_1_1interface.html#a99b94e07f7466557b345f5562287defc',1,'SimpleLMS-master::interface']]],
+  ['user_5fdocuments_5fnames',['user_documents_names',['../namespaceSimpleLMS-master_1_1interface.html#ad5933b04af134ffca55f22b123dc275a',1,'SimpleLMS-master::interface']]],
+  ['user_5ffree',['user_free',['../namespaceSimpleLMS-master_1_1interface.html#a32b39d8111af0e3349f07ad255ea8dae',1,'SimpleLMS-master::interface']]],
+  ['user_5frequested_5fto_5fcheck_5fout',['user_requested_to_check_out',['../namespaceSimpleLMS-master_1_1interface.html#ab316731f302bb0b37f36c66ebfc873ed',1,'SimpleLMS-master::interface']]],
+  ['user_5frequested_5fto_5freturn',['user_requested_to_return',['../namespaceSimpleLMS-master_1_1interface.html#a080d73ae9084bda6b3c53db912dc655f',1,'SimpleLMS-master::interface']]],
+  ['users',['users',['../namespaceSimpleLMS-master_1_1interface.html#a26907f093daf8ff85b0e965f9e11fbcc',1,'SimpleLMS-master::interface']]],
+  ['users_5fnames',['users_names',['../namespaceSimpleLMS-master_1_1interface.html#a093c872601e6a3197c45475b9be63492',1,'SimpleLMS-master::interface']]]
 ];

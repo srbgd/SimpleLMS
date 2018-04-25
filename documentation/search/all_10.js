@@ -1,7 +1,25 @@
 var searchData=
 [
-  ['target',['target',['../classcommand_1_1Command.html#a601b2c4e19bd20c0838f3fd28e0f8a96',1,'command::Command']]],
-  ['test_5fmode',['test_mode',['../classconsole_1_1Interface.html#a20710f7411e332c7e5057b1acba78a97',1,'console.Interface.test_mode()'],['../classconsole_1_1Interface.html#a3568869b81d5dbb214ba5683c4c2cc1b',1,'console.Interface.test_mode()']]],
-  ['title',['title',['../classforms_1_1AddBookForm.html#ac6680f1f9ca28875d0a428d66930ecef',1,'forms.AddBookForm.title()'],['../classforms_1_1AddReferenceBookForm.html#aefdf796c215e9c057f4c026a9911887a',1,'forms.AddReferenceBookForm.title()'],['../classforms_1_1AddJournalForm.html#aaf4519dd00dcea71b77a8e5d2505a6f5',1,'forms.AddJournalForm.title()'],['../classforms_1_1AddAVForm.html#ac43711431d7232ecb8b6a5ad6ea786e0',1,'forms.AddAVForm.title()']]],
-  ['type',['type',['../classforms_1_1SelectForm.html#ae143405fe3c1a91e8161f18569f75d9f',1,'forms::SelectForm']]]
+  ['command',['command',['../namespaceSimpleLMS-master_1_1command.html',1,'SimpleLMS-master']]],
+  ['config',['config',['../namespaceSimpleLMS-master_1_1config.html',1,'SimpleLMS-master']]],
+  ['console',['console',['../namespaceSimpleLMS-master_1_1console.html',1,'SimpleLMS-master']]],
+  ['core',['core',['../namespaceSimpleLMS-master_1_1core.html',1,'SimpleLMS-master']]],
+  ['database',['database',['../namespaceSimpleLMS-master_1_1database.html',1,'SimpleLMS-master']]],
+  ['forms',['forms',['../namespaceSimpleLMS-master_1_1forms.html',1,'SimpleLMS-master']]],
+  ['simplelms',['SimpleLMS',['../index.html',1,'']]],
+  ['interface',['interface',['../namespaceSimpleLMS-master_1_1interface.html',1,'SimpleLMS-master']]],
+  ['main',['main',['../namespaceSimpleLMS-master_1_1main.html',1,'SimpleLMS-master']]],
+  ['mongo_5fdatabase',['mongo_database',['../namespaceSimpleLMS-master_1_1mongo__database.html',1,'SimpleLMS-master']]],
+  ['search',['search',['../classSimpleLMS-master_1_1forms_1_1SearchForm.html#af28d54488319ec5733d6307591e66f4f',1,'SimpleLMS-master.forms.SearchForm.search()'],['../classSimpleLMS-master_1_1core_1_1Core.html#aa76050e6cc2eced38e2812d439c78ae3',1,'SimpleLMS-master.core.Core.search()']]],
+  ['search_5fresults',['search_results',['../namespaceSimpleLMS-master_1_1interface.html#adb9189a8b4b006316b81be946a0978e4',1,'SimpleLMS-master::interface']]],
+  ['searchform',['SearchForm',['../classSimpleLMS-master_1_1forms_1_1SearchForm.html',1,'SimpleLMS-master::forms']]],
+  ['secret_5fkey',['SECRET_KEY',['../classSimpleLMS-master_1_1config_1_1Config.html#a2762384b8e0cc5d8469ce810541d5eec',1,'SimpleLMS-master::config::Config']]],
+  ['selectform',['SelectForm',['../classSimpleLMS-master_1_1forms_1_1SelectForm.html',1,'SimpleLMS-master::forms']]],
+  ['set_5ftest_5fmode',['set_test_mode',['../classSimpleLMS-master_1_1console_1_1Interface.html#a4130228c6e733ec55c9f54e8055fc8e4',1,'SimpleLMS-master::console::Interface']]],
+  ['shelf',['shelf',['../classSimpleLMS-master_1_1mongo__database_1_1DataBase.html#a86c16b821af546567db2eb5bc2165ef5',1,'SimpleLMS-master::mongo_database::DataBase']]],
+  ['simplelms_2dmaster',['SimpleLMS-master',['../namespaceSimpleLMS-master.html',1,'']]],
+  ['sorry',['sorry',['../namespaceSimpleLMS-master_1_1interface.html#aa731678f9f7400827e197de6c0c14348',1,'SimpleLMS-master::interface']]],
+  ['sort_5fnotifications',['sort_notifications',['../classSimpleLMS-master_1_1core_1_1Core.html#a2ea4297bbcc4280aeb513fc71e4c760d',1,'SimpleLMS-master::core::Core']]],
+  ['student',['student',['../classSimpleLMS-master_1_1forms_1_1ApproveForm.html#a8b389290c52fbf21a3dc0f86f7f05149',1,'SimpleLMS-master::forms::ApproveForm']]],
+  ['submit',['submit',['../classSimpleLMS-master_1_1forms_1_1LoginForm.html#ad14a70ad5f4b05513d1d775f25f3e415',1,'SimpleLMS-master.forms.LoginForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1EditProfileForm.html#a933ee2e9c16a4c21b7fa6731f567de15',1,'SimpleLMS-master.forms.EditProfileForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1AddBookForm.html#ae06b98fb03482f64f8369ba32ab08592',1,'SimpleLMS-master.forms.AddBookForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1AddReferenceBookForm.html#a9ad72528825e84dd65049a739faabbbb',1,'SimpleLMS-master.forms.AddReferenceBookForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1AddJournalForm.html#a16b92e406a6fb8f79185d1fb4482d123',1,'SimpleLMS-master.forms.AddJournalForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1AddAVForm.html#aca1f85e839f6ec4fa562a4c8ae903467',1,'SimpleLMS-master.forms.AddAVForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1ChangePasswordForm.html#a5ce7448b9f7abdbd9b7c19b2a18d75eb',1,'SimpleLMS-master.forms.ChangePasswordForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1RegistrationForm.html#aef4aa776ac75031c729962689763d554',1,'SimpleLMS-master.forms.RegistrationForm.submit()'],['../classSimpleLMS-master_1_1forms_1_1SelectForm.html#a915df10dc556a2bf560ce4a3a3b76c88',1,'SimpleLMS-master.forms.SelectForm.submit()']]]
 ];

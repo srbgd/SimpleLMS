@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['main',['main',['../namespacemain.html#ad956ea4684319035d26682a82f6a7a3c',1,'main']]],
-  ['modify',['modify',['../classcore_1_1Core.html#a07cbae8cf3962f734cdcfd9a20f6327a',1,'core.Core.modify()'],['../classdatabase_1_1DataBase.html#a805091d40a25b32485a245ce502eece6',1,'database.DataBase.modify()'],['../classmongo__database_1_1DataBase.html#aa6cfa786e0e6236ae63c3f0295c81f7b',1,'mongo_database.DataBase.modify()']]],
-  ['modify_5fand_5fchange_5ftype',['modify_and_change_type',['../classmongo__database_1_1DataBase.html#a8d15cc23c91a3ea62139a7325880a4b6',1,'mongo_database::DataBase']]],
-  ['modify_5fuser',['modify_user',['../classcore_1_1Core.html#af7e0fe52980c242f6a8c8e266d0718fc',1,'core::Core']]]
+  ['main',['main',['../namespaceSimpleLMS-master_1_1main.html#ae556bac49e4e20580bf84338bb4eca41',1,'SimpleLMS-master::main']]],
+  ['modify',['modify',['../classSimpleLMS-master_1_1core_1_1Core.html#ae87316be00b2eed07a8151b03a5b7775',1,'SimpleLMS-master.core.Core.modify()'],['../classSimpleLMS-master_1_1database_1_1DataBase.html#ab12f64bbdd2b52c7271bb1c8952353d1',1,'SimpleLMS-master.database.DataBase.modify()'],['../classSimpleLMS-master_1_1mongo__database_1_1DataBase.html#ab4f9f179f9a63e5275e0e8ad7e50d6de',1,'SimpleLMS-master.mongo_database.DataBase.modify()']]],
+  ['modify_5fand_5fchange_5ftype',['modify_and_change_type',['../classSimpleLMS-master_1_1mongo__database_1_1DataBase.html#a16748ca2103b1fe73e70ce0f31859405',1,'SimpleLMS-master::mongo_database::DataBase']]],
+  ['modify_5fuser',['modify_user',['../classSimpleLMS-master_1_1core_1_1Core.html#a8c8dcadf6322d7d4c11d264d73e18202',1,'SimpleLMS-master::core::Core']]]
 ];

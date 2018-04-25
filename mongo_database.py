@@ -50,6 +50,9 @@ class DataBase:
 	def delete_many(self, items):
 		self.shelf.delete_many(items)
 
+	def delete_one(self, items):
+		self.shelf.delete_one(items)
+
 	def modify_and_change_type(self, some_id, attributes, type):
 		self.shelf.update_one({"id":some_id}, {
 			"$set": {"attributes":attributes, "type":type}

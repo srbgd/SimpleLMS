@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['address',['address',['../classforms_1_1EditProfileForm.html#aaeefaefef550f84ae11755d4133d220d',1,'forms.EditProfileForm.address()'],['../classforms_1_1RegistrationForm.html#ae21a53a3ccdfcc7b4226eba3e5648d74',1,'forms.RegistrationForm.address()']]],
-  ['app',['app',['../namespaceinterface.html#acece825df764f646248f5f5140d16d58',1,'interface']]],
-  ['approve',['approve',['../classforms_1_1ApproveDocumentForm.html#a5bcb8bfd08cb0f70d045aae41308123e',1,'forms::ApproveDocumentForm']]],
-  ['authors',['authors',['../classforms_1_1AddBookForm.html#a584b609d20bbb7cae28ba786d17f2f4c',1,'forms.AddBookForm.authors()'],['../classforms_1_1AddReferenceBookForm.html#a5c18fbce20ee94a9d50044d80ef78d1f',1,'forms.AddReferenceBookForm.authors()'],['../classforms_1_1AddJournalForm.html#a0c44aa57687531cac5d83e41c98a1a28',1,'forms.AddJournalForm.authors()'],['../classforms_1_1AddAVForm.html#ad516e69177ab0dc8ff5e26ee1d65df55',1,'forms.AddAVForm.authors()']]]
+  ['address',['address',['../classSimpleLMS-master_1_1forms_1_1EditProfileForm.html#a056d5385da99935505cc62da75b7c063',1,'SimpleLMS-master.forms.EditProfileForm.address()'],['../classSimpleLMS-master_1_1forms_1_1RegistrationForm.html#a69bcf1eac943cdc4b064df81b86f9786',1,'SimpleLMS-master.forms.RegistrationForm.address()']]],
+  ['admin',['admin',['../classSimpleLMS-master_1_1core_1_1Core.html#a32c5867560b4df6573e09410720a1880',1,'SimpleLMS-master::core::Core']]],
+  ['app',['app',['../namespaceSimpleLMS-master_1_1interface.html#aefdb03bd08e6ade4e9f7f8f6b36937de',1,'SimpleLMS-master::interface']]],
+  ['authors',['authors',['../classSimpleLMS-master_1_1forms_1_1AddBookForm.html#a66dd086213e42651d324f8d6576c6e6c',1,'SimpleLMS-master.forms.AddBookForm.authors()'],['../classSimpleLMS-master_1_1forms_1_1AddReferenceBookForm.html#aee4675606212b6e02f91ff5c18dc5a31',1,'SimpleLMS-master.forms.AddReferenceBookForm.authors()'],['../classSimpleLMS-master_1_1forms_1_1AddJournalForm.html#aa89f1dd40381e81c0e8b878bee9bad4f',1,'SimpleLMS-master.forms.AddJournalForm.authors()'],['../classSimpleLMS-master_1_1forms_1_1AddAVForm.html#a1184093389104fac09703ce7c22c3f05',1,'SimpleLMS-master.forms.AddAVForm.authors()']]]
 ];

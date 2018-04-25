@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['id',['id',['../classcore_1_1Core.html#ac988c2bde3ce76709703a574b9e98dd7',1,'core.Core.id()'],['../classcore_1_1Core.html#a120a1846dcf3c57e8769061579933556',1,'core.Core.id()']]],
-  ['interface_5fmode',['interface_mode',['../namespacemain.html#ad5f8ffc9260a589cbb541d285c028043',1,'main']]],
-  ['is_5fbest_5fseller',['is_best_seller',['../classforms_1_1AddBookForm.html#aacc6ed26bd5e529ce793d503a99d61a6',1,'forms::AddBookForm']]]
+  ['id',['id',['../classSimpleLMS-master_1_1core_1_1Core.html#a4fb87098678bb88f941ec1856031413d',1,'SimpleLMS-master.core.Core.id()'],['../classSimpleLMS-master_1_1core_1_1Core.html#a266a855f39dcf6f6f63673b0203f8332',1,'SimpleLMS-master.core.Core.id()']]],
+  ['interface_5fmode',['interface_mode',['../namespaceSimpleLMS-master_1_1main.html#a1b01e974501a9ef45cecb1c1ddfaddcb',1,'SimpleLMS-master::main']]],
+  ['is_5fbest_5fseller',['is_best_seller',['../classSimpleLMS-master_1_1forms_1_1AddBookForm.html#a85d9719793f78703c24c5c63e960c390',1,'SimpleLMS-master::forms::AddBookForm']]]
 ];

@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['edition',['edition',['../classforms_1_1AddBookForm.html#a748540de44853381c4308691940c9e64',1,'forms.AddBookForm.edition()'],['../classforms_1_1AddReferenceBookForm.html#a614bad79a2a3fae104e58a97c220a79a',1,'forms.AddReferenceBookForm.edition()']]],
-  ['editors',['editors',['../classforms_1_1AddJournalForm.html#ab552b77b4e80d60099db6f5f62427636',1,'forms::AddJournalForm']]]
+  ['edition',['edition',['../classSimpleLMS-master_1_1forms_1_1AddBookForm.html#abf45e327d0abf3788a1947c6bf8c0ddd',1,'SimpleLMS-master.forms.AddBookForm.edition()'],['../classSimpleLMS-master_1_1forms_1_1AddReferenceBookForm.html#ae359a70b27f2adb55be95d1f0dac2bbc',1,'SimpleLMS-master.forms.AddReferenceBookForm.edition()']]],
+  ['editors',['editors',['../classSimpleLMS-master_1_1forms_1_1AddJournalForm.html#a808633ccb2a11c4d9c386631035b901e',1,'SimpleLMS-master::forms::AddJournalForm']]]
 ];

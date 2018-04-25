@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['loginform',['LoginForm',['../classforms_1_1LoginForm.html',1,'forms']]]
+  ['loginform',['LoginForm',['../classSimpleLMS-master_1_1forms_1_1LoginForm.html',1,'SimpleLMS-master::forms']]]
 ];

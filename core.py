@@ -23,9 +23,11 @@ class Core:
 	admin = None
 
 	def search(self, what, where="", how=""):
+		"""Searches for documents"""
 		return list(filter(lambda x: (all if how == 'AND' else any)(map(lambda s: ((lambda i: str().join(map(str, i['attributes'].value()))) if where == str() else (lambda i: i['attributes'][where] if where in i['attributes'].keys() else ''))(x).lower().find(s) != -1, what.lower().split())), self.find_all_documents()))
 
 	def log(self, user_id, action, target_id, comment=''):
+		"""Logs an action"""
 		self.add('log', {'user_id': user_id, 'action': action, 'target_id': target_id, 'comment': comment, 'time': datetime.datetime.now().strftime('[%d/%m/%y-%H:%M:%S]')})
 
 	def add(self, target, attributes):
@@ -169,6 +171,7 @@ class Core:
 		return list(documents)
 
 	def courteous_find(self, attributes):
+		"""Another way to find documents"""
 		return self.db.courteous_lookup(attributes)
 
 	def find_all_documents(self):
@@ -250,6 +253,7 @@ class Core:
 			return False
 
 	def check_permissions(self, user_type, command):
+		"""Checks if the user with current type has a permission to execute the current command"""
 		if user_type == 'admin':
 			return True
 		return command in [i for i in self.users if i['type'] == user_type][0]['permissions']
@@ -451,6 +455,7 @@ class Core:
 		return self.find('outstanding-request', {'target_id': doc_id}) != []
 
 	def get_sorted_logs(self):
+		"""Returnes sorted list of all logs"""
 		return list(reversed((sorted(self.find('log', {}), key = lambda x: datetime.datetime.strptime(x['attributes']['time'], '[%d/%m/%y-%H:%M:%S]')))))
 
 	@staticmethod
@@ -473,6 +478,7 @@ class Core:
 			self.delete(notification['id'])
 
 	def delete_all_logs(self):
+		"""Deletes all logs"""
 		self.db.delete_many({"type": "log"})
 
 	def normalize_request_list(self):
@@ -559,6 +565,7 @@ class Core:
 		return True
 
 	def init_admin(self, password):
+		"""Initialize admin"""
 		self.admin = self.find('admin', {})
 		if self.admin:
 			self.admin = self.admin[0]

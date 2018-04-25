@@ -1,10 +1,9 @@
 var searchData=
 [
-  ['outstanding_5frequest',['outstanding_request',['../classcore_1_1Core.html#a9c0bc7364a84099662cefbd90471f269',1,'core::Core']]],
-  ['outstanding_5frequest_5foff',['outstanding_request_off',['../namespaceinterface.html#a7901839e71c1897ebc26ca9693323542',1,'interface']]],
-  ['outstanding_5frequest_5fon',['outstanding_request_on',['../namespaceinterface.html#a28790136b26b53c6083ab2d6cdaed933',1,'interface']]],
-  ['overdue_5fand_5ffine',['overdue_and_fine',['../namespaceinterface.html#adbce31b4ff93457a925b6915eae8ac04',1,'interface']]],
-  ['overdue_5fdays',['overdue_days',['../namespaceinterface.html#a878e76d3640c85504544cdff0d09772a',1,'interface']]],
-  ['overdue_5fdays_5fand_5ffines',['overdue_days_and_fines',['../namespaceinterface.html#a34cadc7aa16165212e9f2f7909501116',1,'interface']]],
-  ['overdue_5fusers',['overdue_users',['../namespaceinterface.html#a8a6190bbec5fe2dd7ec7e55979df9469',1,'interface']]]
+  ['n',['n',['../namespaceSimpleLMS-master_1_1main.html#a4f4281d638b432b51305d46218680483',1,'SimpleLMS-master::main']]],
+  ['name',['name',['../classSimpleLMS-master_1_1forms_1_1EditProfileForm.html#aca739b9e20524c8fc8ef0ae112ff62f6',1,'SimpleLMS-master.forms.EditProfileForm.name()'],['../classSimpleLMS-master_1_1forms_1_1RegistrationForm.html#a6ec98683446f8f648dc0161cb91eb87f',1,'SimpleLMS-master.forms.RegistrationForm.name()']]],
+  ['normalize_5frequest_5flist',['normalize_request_list',['../classSimpleLMS-master_1_1core_1_1Core.html#a155be55af6179b6928d220543e962475',1,'SimpleLMS-master::core::Core']]],
+  ['notify',['notify',['../classSimpleLMS-master_1_1core_1_1Core.html#a3056ab97af92fbd56642c72459b11d53',1,'SimpleLMS-master::core::Core']]],
+  ['notify_5fqueue',['notify_queue',['../classSimpleLMS-master_1_1core_1_1Core.html#ae95ef32f4045f4abbd56385f9bc0be2c',1,'SimpleLMS-master::core::Core']]],
+  ['number',['number',['../classSimpleLMS-master_1_1forms_1_1AddCopies.html#a7daa18ec6611ca17e2c4c77865161065',1,'SimpleLMS-master::forms::AddCopies']]]
 ];
