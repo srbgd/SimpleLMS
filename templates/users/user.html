@@ -42,7 +42,7 @@
         <br>
         <h5>Notifications:</h5>
         {% for notification in notifications%}
-            <p>{{notification.attributes.message}}</span></p>
+            <p>{{notification.attributes.message}} Date: {{notification.attributes.date}} </span></p>
         {% endfor %}
     {%endif%}
 {% endblock %}
