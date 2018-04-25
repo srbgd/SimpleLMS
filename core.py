@@ -484,6 +484,7 @@ class Core:
 	def normalize_request_list(self):
 		"""Normalize request list (delete old requests and notify users)"""
 		date = datetime.datetime.now().strftime('%d/%m/%Y')
+		print("request list", self.request_list)
 		if date != self.request_list['last_modified']:
 			temp_list = []
 			self.request_list['last_modified'] = date

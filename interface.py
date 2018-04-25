@@ -31,7 +31,6 @@ def login_required(func):
 def can_do_a_thing_wrapper(thing):
 	"""Helping function to check whether a user can perform a certain action"""
 	user_id = session.get('user_id')
-	print(thing, can_do("can_" + thing))
 	if user_id is not None:
 		if can_do("can_" + thing) or core.check_permissions(get_current_user()['type'], thing):  # cookies are on
 			return True
@@ -45,8 +44,6 @@ def can_do_a_thing_wrapper(thing):
 def can_do_a_thing_to_cookie(user_id, thing):
 	"""Helping function to check whether a user can perform a certain action.
 	Returns 1 if a user can, 0 otherwise"""
-	print(core.find_by_id(user_id)['type'], thing)
-	print(core.check_permissions(core.find_by_id(user_id)['type'], thing))
 	if core.check_permissions(core.find_by_id(user_id)['type'], thing):
 		return "1"
 	else:
@@ -313,8 +310,6 @@ def search_results(search_string):
 	else:
 		how = "OR"
 	results = core.search(what=search_string, how=how, where=where)
-	print(search_string, " how: ", how, " where: ", where)
-	print("results", results)
 	if results is []:
 		flash('No results found!')
 		resp = make_response(redirect('/'))
@@ -355,7 +350,7 @@ def document(doc_id):
 							   requested_to_return=user_requested_to_return(copy_id), copy_id=copy_id,
 							   overdue=get_overdue(copy_id), can_renew=core.can_renew(doc_id, get_current_user()),
 							   priority_queue=priority_queue, names_and_types=names_and_types,
-							   can_place_outstanding_request = core.check_permissions(get_current_user()["type"], "outstanding-request"),  # TODO not working
+							   can_place_outstanding_request = core.check_permissions(get_current_user()["type"], "outstanding-request"),
 							   is_outstanding_request=core.placed_outstanding_request(doc_id))
 	else:
 		return redirect(url_for('sorry'))
@@ -478,7 +473,7 @@ def add_document(action_id):
 @can_modify_wrapper
 def delete_copy(origin_id):
 	"""Delete 1 copy of a document"""
-	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})  # delete_one?
+	core.db.delete_one({"type": "copy", "attributes.origin_id": origin_id, "attributes.user_id": None})
 	core.log(get_current_user_id(),"delete n copies", origin_id, "n=1")
 	return redirect(url_for("document", doc_id=origin_id))
 
@@ -652,7 +647,7 @@ def delete_user(user_id):
 
 @app.route('/registration_requests', methods=["GET", "POST"])
 @can_add_wrapper
-def registration_requests():  # TODO: Get rid of  buttons
+def registration_requests():
 	"""For librarian to assign a user's status"""
 	users = core.get_all_unconfirmed_users()
 	forms = [ApproveForm(request.form) for i in range(len(users))]
@@ -701,18 +696,15 @@ def documents_requests():
 def approve_request(req_id):
 	"""for librarian: approve request"""
 	req = core.find_by_id(req_id)
-	try:
-		if req['attributes']['action'] == "check_out":
-			if not core.approve_check_out(req['id'], get_current_user()):
-				flash("failed to approve check out")
-			core.log(get_current_user_id(), 'approve to check out', req['attributes']['target_id'], "of a user with id " + str(req['attributes']['user']))
-		else:
-			if not core.approve_return(req['id'], get_current_user()):
-				flash("failed to approve return")
-			core.log(get_current_user_id(), 'approve to return', req['attributes']['target_id'],
-					 "of a user with id " + str(req['attributes']['user_id']))
-	except Exception:
-		return redirect(url_for("sorry"))
+	if req['attributes']['action'] == "check_out":
+		if not core.approve_check_out(req['id'], get_current_user()):
+			flash("failed to approve check out")
+		core.log(get_current_user_id(), 'approve to check out', req['attributes']['target_id'], "of a user with id " + str(req['attributes']['user_id']))
+	else:
+		if not core.approve_return(req['id'], get_current_user()):
+			flash("failed to approve return")
+		core.log(get_current_user_id(), 'approve to return', req['attributes']['target_id'],
+				 "of a user with id " + str(req['attributes']['user_id']))
 	return redirect(url_for("documents_requests"))
 
 
